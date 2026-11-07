@@ -1,10 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Gym</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#764ba2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="My Gym">
 <style>
   * { box-sizing: border-box; }
   body {
@@ -153,7 +157,6 @@
     <div class="glass tilt quote" id="quoteBox"></div>
 
     <div class="grid">
-      <!-- Fee card -->
       <div class="glass tilt">
         <h3>💳 Your Fee</h3>
         <div class="fee-row">
@@ -166,7 +169,6 @@
         </div>
       </div>
 
-      <!-- Check-in card -->
       <div class="glass tilt checkin">
         <h3>🏋️ Today's Workout</h3>
         <div class="hero-ico">🔥</div>
@@ -176,14 +178,12 @@
       </div>
     </div>
 
-    <!-- Stats -->
     <div class="stats">
       <div class="tile t1 tilt-tile"><b id="statAttend">0</b><span>Visits this month</span></div>
       <div class="tile t2 tilt-tile"><b id="statPaid">0</b><span>Total paid (PKR)</span></div>
       <div class="tile t3 tilt-tile"><b id="statShift">-</b><span>Your shift</span></div>
     </div>
 
-    <!-- Calendar -->
     <div class="glass tilt">
       <h3>🗓️ Last 30 Days</h3>
       <div class="cal" id="cal"></div>
@@ -191,13 +191,11 @@
     </div>
 
     <div class="grid">
-      <!-- Notices -->
       <div class="glass tilt">
         <h3>📢 Notices from the Gym</h3>
         <div id="notices"></div>
       </div>
 
-      <!-- Payments -->
       <div class="glass tilt">
         <h3>🧾 Payment History</h3>
         <div id="payments"></div>
@@ -465,6 +463,11 @@ $("checkinBtn").addEventListener("click", async () => {
     $("checkinBtn").disabled = false;
   }
 });
+
+// ---------- Install support (service worker) ----------
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 </script>
 </body>
 </html>
