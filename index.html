@@ -24,6 +24,7 @@
   .btn-dark { background:#374151; }
   .btn-small { padding:6px 10px; font-size:13px; background:#ef4444; }
   .btn-edit { padding:6px 10px; font-size:13px; background:#1e88e5; }
+  .btn-pay { padding:6px 10px; font-size:13px; background:#8e24aa; }
   .btn-present { padding:6px 10px; font-size:13px; background:var(--green); }
   .msg { min-height:20px; margin-top:10px; font-size:14px; color:#c62828; }
   .hidden { display:none !important; }
@@ -36,7 +37,8 @@
   .stat.green { border-color:var(--green); }
   .stat.amber { border-color:var(--amber); }
   .stat.blue { border-color:#1e88e5; }
-  .stat .num { font-size:28px; font-weight:bold; }
+  .stat.purple { border-color:#8e24aa; }
+  .stat .num { font-size:26px; font-weight:bold; }
   .stat .lbl { color:var(--muted); font-size:13px; }
   .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
   @media (min-width:800px) { .grid { grid-template-columns: 360px 1fr; align-items:start; } }
@@ -46,11 +48,12 @@
   th { color:var(--muted); font-weight:600; font-size:13px; white-space:nowrap; }
   .small { color:var(--muted); font-size:12px; margin-top:2px; }
   .actions { white-space:nowrap; }
-  .actions button { margin-right:4px; }
+  .actions button { margin:2px 4px 2px 0; }
   .badge { padding:4px 8px; border-radius:20px; font-size:12px; color:#fff; white-space:nowrap; }
   .b-ok { background:var(--green); }
   .b-soon { background:var(--amber); color:#222; }
   .b-exp { background:#c62828; }
+  .section-gap { margin-top:16px; }
 </style>
 </head>
 <body>
@@ -84,48 +87,84 @@
       <div class="stat green"><div class="num" id="activeCount">0</div><div class="lbl">Active fees</div></div>
       <div class="stat amber"><div class="num" id="soonCount">0</div><div class="lbl">Expiring in 5 days</div></div>
       <div class="stat"><div class="num" id="expiredCount">0</div><div class="lbl">Expired fees</div></div>
+      <div class="stat purple"><div class="num" id="collectedCount">0</div><div class="lbl">Collected this month (PKR)</div></div>
     </div>
 
     <div class="grid">
-      <!-- MEMBER FORM (add or edit) -->
-      <div class="card">
-        <h2 id="formTitle">Add member</h2>
+      <div>
+        <!-- MEMBER FORM -->
+        <div class="card">
+          <h2 id="formTitle">Add member</h2>
+          <input id="fName" placeholder="Full name *">
+          <input id="fPhone" placeholder="Phone number *">
+          <input id="fEmail" type="email" placeholder="Email (optional)">
+          <input id="fAddress" placeholder="Home address">
+          <label class="label" for="fDob">Date of birth</label>
+          <input id="fDob" type="date">
+          <input id="fEmName" placeholder="Emergency contact name">
+          <input id="fEmPhone" placeholder="Emergency contact phone">
+          <label class="label" for="fJoin">Joining date</label>
+          <input id="fJoin" type="date">
+          <label class="label" for="fFeeStart">Fee start date *</label>
+          <input id="fFeeStart" type="date">
+          <input id="fFee" type="number" placeholder="Fee amount (PKR)">
+          <select id="fShift">
+            <option value="Morning">Morning shift</option>
+            <option value="Evening">Evening shift</option>
+          </select>
+          <textarea id="fNotes" placeholder="Notes (optional)"></textarea>
+          <button class="btn-full" id="saveBtn">Add member</button>
+          <button class="btn-full btn-dark hidden" id="cancelBtn">Cancel editing</button>
+          <div class="msg" id="formMsg"></div>
+        </div>
 
-        <input id="fName" placeholder="Full name *">
-        <input id="fPhone" placeholder="Phone number *">
-        <input id="fEmail" type="email" placeholder="Email (optional)">
-        <input id="fAddress" placeholder="Home address">
-        <label class="label" for="fDob">Date of birth</label>
-        <input id="fDob" type="date">
-        <input id="fEmName" placeholder="Emergency contact name">
-        <input id="fEmPhone" placeholder="Emergency contact phone">
-        <label class="label" for="fJoin">Joining date</label>
-        <input id="fJoin" type="date">
-        <label class="label" for="fFeeStart">Fee start date *</label>
-        <input id="fFeeStart" type="date">
-        <input id="fFee" type="number" placeholder="Fee amount (PKR)">
-        <select id="fShift">
-          <option value="Morning">Morning shift</option>
-          <option value="Evening">Evening shift</option>
-        </select>
-        <textarea id="fNotes" placeholder="Notes (optional, e.g. medical info, goals)"></textarea>
-
-        <button class="btn-full" id="saveBtn">Add member</button>
-        <button class="btn-full btn-dark hidden" id="cancelBtn">Cancel editing</button>
-        <div class="msg" id="formMsg"></div>
+        <!-- RECORD PAYMENT -->
+        <div class="card section-gap" id="payCard">
+          <h2>Record payment</h2>
+          <label class="label" for="payMember">Member</label>
+          <select id="payMember"></select>
+          <label class="label" for="payAmount">Amount paid (PKR)</label>
+          <input id="payAmount" type="number" placeholder="Amount">
+          <label class="label" for="payDate">Payment date (fee starts from this day)</label>
+          <input id="payDate" type="date">
+          <label class="label" for="payMethod">Payment method</label>
+          <select id="payMethod">
+            <option value="Cash">Cash</option>
+            <option value="Bank transfer">Bank transfer</option>
+            <option value="JazzCash">JazzCash</option>
+            <option value="Easypaisa">Easypaisa</option>
+          </select>
+          <button class="btn-full" id="payBtn">Save payment</button>
+          <div class="msg" id="payMsg"></div>
+        </div>
       </div>
 
-      <!-- MEMBER LIST -->
-      <div class="card">
-        <h2>Members</h2>
-        <input id="search" placeholder="Search by name or phone">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Member</th><th>Shift</th><th>Fee</th><th>Fee status</th><th>Today</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="memberRows"></tbody>
-          </table>
+      <div>
+        <!-- MEMBER LIST -->
+        <div class="card">
+          <h2>Members</h2>
+          <input id="search" placeholder="Search by name, phone, or address">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Member</th><th>Shift</th><th>Fee</th><th>Fee status</th><th>Today</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="memberRows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PAYMENT HISTORY -->
+        <div class="card section-gap">
+          <h2>Payment history</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Date</th><th>Member</th><th>Amount</th><th>Method</th></tr>
+              </thead>
+              <tbody id="paymentRows"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -152,9 +191,9 @@ const db = getFirestore(app);
 
 const $ = (id) => document.getElementById(id);
 let allMembers = [];
+let allPayments = [];
 let presentIds = new Set();
-let unsubMembers = null;
-let unsubAttendance = null;
+let unsubMembers = null, unsubAttendance = null, unsubPayments = null;
 let editingId = null;
 
 // ---------- Login ----------
@@ -174,6 +213,7 @@ onAuthStateChanged(auth, (user) => {
     $("loginBox").classList.add("hidden");
     $("adminBox").classList.remove("hidden");
     $("userEmail").textContent = "Logged in as " + user.email;
+    $("payDate").value = todayStr();
     startListening();
   } else {
     $("loginBox").classList.remove("hidden");
@@ -216,6 +256,7 @@ function startListening() {
     allMembers = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderStats();
     renderTable();
+    renderMemberDropdown();
   }, (err) => {
     $("memberRows").innerHTML = `<tr><td colspan="6">Could not load members: ${escapeHtml(err.message)}</td></tr>`;
   });
@@ -225,13 +266,19 @@ function startListening() {
     renderStats();
     renderTable();
   });
+
+  unsubPayments = onSnapshot(query(collection(db, "payments"), orderBy("date", "desc")), (snapshot) => {
+    allPayments = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderPayments();
+  });
 }
 
 function stopListening() {
   if (unsubMembers) unsubMembers();
   if (unsubAttendance) unsubAttendance();
-  unsubMembers = null;
-  unsubAttendance = null;
+  if (unsubPayments) unsubPayments();
+  unsubMembers = unsubAttendance = unsubPayments = null;
 }
 
 function renderStats() {
@@ -243,11 +290,19 @@ function renderStats() {
     else if (d <= 5) soon++;
     else active++;
   });
+
+  // Total collected in the current month
+  const monthPrefix = todayStr().slice(0, 7);
+  const collected = allPayments
+    .filter((p) => (p.date || "").startsWith(monthPrefix))
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
   $("totalCount").textContent = allMembers.length;
   $("presentCount").textContent = presentIds.size;
   $("activeCount").textContent = active;
   $("soonCount").textContent = soon;
   $("expiredCount").textContent = expired;
+  $("collectedCount").textContent = collected.toLocaleString();
 }
 
 function renderTable() {
@@ -283,6 +338,7 @@ function renderTable() {
       <td>${feeBadge(daysLeft(m.feeStart))}</td>
       <td>${presentBtn}</td>
       <td class="actions">
+        <button class="btn-pay" data-action="pay" data-id="${escapeHtml(m.id)}">Pay</button>
         <button class="btn-edit" data-action="edit" data-id="${escapeHtml(m.id)}">Edit</button>
         <button class="btn-small" data-action="delete" data-id="${escapeHtml(m.id)}">Delete</button>
       </td>
@@ -290,9 +346,30 @@ function renderTable() {
   }).join("");
 }
 
+function renderPayments() {
+  if (allPayments.length === 0) {
+    $("paymentRows").innerHTML = `<tr><td colspan="4">No payments recorded yet.</td></tr>`;
+    return;
+  }
+  $("paymentRows").innerHTML = allPayments.slice(0, 50).map((p) => `
+    <tr>
+      <td>${escapeHtml(p.date)}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.amount)}</td>
+      <td>${escapeHtml(p.method)}</td>
+    </tr>`).join("");
+}
+
+function renderMemberDropdown() {
+  const current = $("payMember").value;
+  $("payMember").innerHTML = `<option value="">Select a member</option>` +
+    allMembers.map((m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)}</option>`).join("");
+  if (current) $("payMember").value = current;
+}
+
 $("search").addEventListener("input", renderTable);
 
-// ---------- Table buttons: present, edit, delete ----------
+// ---------- Table buttons: present, pay, edit, delete ----------
 $("memberRows").addEventListener("click", async (e) => {
   const action = e.target.dataset.action;
   const id = e.target.dataset.id;
@@ -308,6 +385,15 @@ $("memberRows").addEventListener("click", async (e) => {
     });
   }
 
+  if (action === "pay") {
+    const member = allMembers.find((m) => m.id === id);
+    $("payMember").value = id;
+    $("payAmount").value = member ? member.feeAmount : "";
+    $("payDate").value = todayStr();
+    $("payMsg").textContent = "";
+    $("payCard").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   if (action === "edit") {
     const member = allMembers.find((m) => m.id === id);
     if (member) startEdit(member);
@@ -316,6 +402,46 @@ $("memberRows").addEventListener("click", async (e) => {
   if (action === "delete" && confirm("Delete this member?")) {
     await deleteDoc(doc(db, "members", id));
     if (editingId === id) resetForm();
+  }
+});
+
+// ---------- Record payment ----------
+$("payBtn").addEventListener("click", async () => {
+  const memberId = $("payMember").value;
+  const amount = $("payAmount").value.trim();
+  const date = $("payDate").value;
+  const method = $("payMethod").value;
+
+  if (!memberId || !amount || !date) {
+    $("payMsg").style.color = "#c62828";
+    $("payMsg").textContent = "Please select a member and enter the amount and date.";
+    return;
+  }
+
+  const member = allMembers.find((m) => m.id === memberId);
+  $("payBtn").disabled = true;
+  try {
+    // Save the payment in history
+    await addDoc(collection(db, "payments"), {
+      memberId,
+      name: member ? member.name : "",
+      amount,
+      date,
+      method,
+      createdAt: new Date()
+    });
+    // Restart the member's fee from the payment date
+    await updateDoc(doc(db, "members", memberId), { feeStart: date, feeAmount: amount });
+
+    $("payMsg").style.color = "#2e7d32";
+    $("payMsg").textContent = "Payment saved. Fee renewed from " + date + ".";
+    $("payAmount").value = "";
+    $("payDate").value = todayStr();
+  } catch (err) {
+    $("payMsg").style.color = "#c62828";
+    $("payMsg").textContent = "Error: " + err.message;
+  } finally {
+    $("payBtn").disabled = false;
   }
 });
 
@@ -370,13 +496,12 @@ $("saveBtn").addEventListener("click", async () => {
       await updateDoc(doc(db, "members", editingId), { ...data, updatedAt: new Date() });
       $("formMsg").style.color = "#2e7d32";
       $("formMsg").textContent = "Changes saved.";
-      resetForm();
     } else {
       await addDoc(collection(db, "members"), { ...data, createdAt: new Date() });
       $("formMsg").style.color = "#2e7d32";
       $("formMsg").textContent = "Member added.";
-      resetForm();
     }
+    resetForm();
   } catch (err) {
     $("formMsg").style.color = "#c62828";
     $("formMsg").textContent = "Error: " + err.message;
