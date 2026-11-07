@@ -15,15 +15,18 @@
   h2 { margin:0 0 12px; font-size:18px; }
   .sub { color:var(--muted); margin:0 0 16px; font-size:14px; }
   .label { display:block; color:var(--muted); font-size:13px; margin-top:8px; }
-  input, select { width:100%; padding:12px; margin:6px 0; border:1px solid #d1d5db; border-radius:8px; font-size:16px; background:#fff; }
+  input, select, textarea { width:100%; padding:12px; margin:6px 0; border:1px solid #d1d5db; border-radius:8px; font-size:16px; background:#fff; font-family:inherit; }
+  textarea { min-height:70px; resize:vertical; }
   button { padding:12px 16px; border:none; border-radius:8px; font-size:15px; cursor:pointer; color:#fff; background:var(--red); }
   button:hover { opacity:0.92; }
   button:disabled { background:#9ca3af; cursor:default; }
   .btn-full { width:100%; margin-top:8px; }
   .btn-dark { background:#374151; }
   .btn-small { padding:6px 10px; font-size:13px; background:#ef4444; }
+  .btn-edit { padding:6px 10px; font-size:13px; background:#1e88e5; }
   .btn-present { padding:6px 10px; font-size:13px; background:var(--green); }
   .msg { min-height:20px; margin-top:10px; font-size:14px; color:#c62828; }
+  .hidden { display:none !important; }
   header { background:var(--dark); color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
   header h1 { color:#fff; font-size:20px; }
   header span { font-size:13px; opacity:0.8; }
@@ -36,16 +39,18 @@
   .stat .num { font-size:28px; font-weight:bold; }
   .stat .lbl { color:var(--muted); font-size:13px; }
   .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
-  @media (min-width:800px) { .grid { grid-template-columns: 340px 1fr; } }
+  @media (min-width:800px) { .grid { grid-template-columns: 360px 1fr; align-items:start; } }
   .table-wrap { overflow-x:auto; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
-  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #eee; white-space:nowrap; }
-  th { color:var(--muted); font-weight:600; font-size:13px; }
-  .badge { padding:4px 8px; border-radius:20px; font-size:12px; color:#fff; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #eee; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:13px; white-space:nowrap; }
+  .small { color:var(--muted); font-size:12px; margin-top:2px; }
+  .actions { white-space:nowrap; }
+  .actions button { margin-right:4px; }
+  .badge { padding:4px 8px; border-radius:20px; font-size:12px; color:#fff; white-space:nowrap; }
   .b-ok { background:var(--green); }
   .b-soon { background:var(--amber); color:#222; }
   .b-exp { background:#c62828; }
-  .hidden { display:none !important; }
 </style>
 </head>
 <body>
@@ -82,30 +87,42 @@
     </div>
 
     <div class="grid">
+      <!-- MEMBER FORM (add or edit) -->
       <div class="card">
-        <h2>Add member</h2>
-        <input id="mName" placeholder="Full name">
-        <input id="mPhone" placeholder="Phone number">
-        <label class="label" for="mJoin">Joining date</label>
-        <input id="mJoin" type="date">
-        <label class="label" for="mFeeStart">Fee start date</label>
-        <input id="mFeeStart" type="date">
-        <input id="mFee" type="number" placeholder="Fee amount (PKR)">
-        <select id="mShift">
+        <h2 id="formTitle">Add member</h2>
+
+        <input id="fName" placeholder="Full name *">
+        <input id="fPhone" placeholder="Phone number *">
+        <input id="fEmail" type="email" placeholder="Email (optional)">
+        <input id="fAddress" placeholder="Home address">
+        <label class="label" for="fDob">Date of birth</label>
+        <input id="fDob" type="date">
+        <input id="fEmName" placeholder="Emergency contact name">
+        <input id="fEmPhone" placeholder="Emergency contact phone">
+        <label class="label" for="fJoin">Joining date</label>
+        <input id="fJoin" type="date">
+        <label class="label" for="fFeeStart">Fee start date *</label>
+        <input id="fFeeStart" type="date">
+        <input id="fFee" type="number" placeholder="Fee amount (PKR)">
+        <select id="fShift">
           <option value="Morning">Morning shift</option>
           <option value="Evening">Evening shift</option>
         </select>
-        <button class="btn-full" id="addBtn">Add member</button>
-        <div class="msg" id="addMsg"></div>
+        <textarea id="fNotes" placeholder="Notes (optional, e.g. medical info, goals)"></textarea>
+
+        <button class="btn-full" id="saveBtn">Add member</button>
+        <button class="btn-full btn-dark hidden" id="cancelBtn">Cancel editing</button>
+        <div class="msg" id="formMsg"></div>
       </div>
 
+      <!-- MEMBER LIST -->
       <div class="card">
         <h2>Members</h2>
         <input id="search" placeholder="Search by name or phone">
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Name</th><th>Phone</th><th>Shift</th><th>Fee</th><th>Fee status</th><th>Today</th><th></th></tr>
+              <tr><th>Member</th><th>Shift</th><th>Fee</th><th>Fee status</th><th>Today</th><th>Actions</th></tr>
             </thead>
             <tbody id="memberRows"></tbody>
           </table>
@@ -118,7 +135,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, deleteDoc, setDoc, doc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, setDoc, doc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBRuTpQTgzJoHPSGSkRDW9GLw6r4LjJpjM",
@@ -138,6 +155,7 @@ let allMembers = [];
 let presentIds = new Set();
 let unsubMembers = null;
 let unsubAttendance = null;
+let editingId = null;
 
 // ---------- Login ----------
 $("loginBtn").addEventListener("click", async () => {
@@ -169,7 +187,6 @@ function escapeHtml(text) {
   return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
 
-// Today's date as YYYY-MM-DD in the phone's local time
 function todayStr() {
   return new Date().toLocaleDateString("en-CA");
 }
@@ -200,7 +217,7 @@ function startListening() {
     renderStats();
     renderTable();
   }, (err) => {
-    $("memberRows").innerHTML = `<tr><td colspan="7">Could not load members: ${escapeHtml(err.message)}</td></tr>`;
+    $("memberRows").innerHTML = `<tr><td colspan="6">Could not load members: ${escapeHtml(err.message)}</td></tr>`;
   });
 
   unsubAttendance = onSnapshot(query(collection(db, "attendance"), where("date", "==", todayStr())), (snapshot) => {
@@ -236,33 +253,46 @@ function renderStats() {
 function renderTable() {
   const term = $("search").value.trim().toLowerCase();
   const list = allMembers.filter((m) =>
-    !term || (m.name || "").toLowerCase().includes(term) || (m.phone || "").includes(term)
+    !term ||
+    (m.name || "").toLowerCase().includes(term) ||
+    (m.phone || "").includes(term) ||
+    (m.address || "").toLowerCase().includes(term)
   );
+
   if (list.length === 0) {
-    $("memberRows").innerHTML = `<tr><td colspan="7">No members found.</td></tr>`;
+    $("memberRows").innerHTML = `<tr><td colspan="6">No members found.</td></tr>`;
     return;
   }
+
   $("memberRows").innerHTML = list.map((m) => {
     const isPresent = presentIds.has(m.id);
     const presentBtn = isPresent
       ? `<button class="btn-present" disabled>Present</button>`
       : `<button class="btn-present" data-action="present" data-id="${escapeHtml(m.id)}">Mark present</button>`;
+
     return `
     <tr>
-      <td>${escapeHtml(m.name)}</td>
-      <td>${escapeHtml(m.phone)}</td>
+      <td>
+        <strong>${escapeHtml(m.name)}</strong>
+        <div class="small">${escapeHtml(m.phone)}${m.email ? " · " + escapeHtml(m.email) : ""}</div>
+        ${m.address ? `<div class="small">${escapeHtml(m.address)}</div>` : ""}
+        ${m.emName ? `<div class="small">Emergency: ${escapeHtml(m.emName)} ${escapeHtml(m.emPhone)}</div>` : ""}
+      </td>
       <td>${escapeHtml(m.shift)}</td>
       <td>${escapeHtml(m.feeAmount)}</td>
       <td>${feeBadge(daysLeft(m.feeStart))}</td>
       <td>${presentBtn}</td>
-      <td><button class="btn-small" data-action="delete" data-id="${escapeHtml(m.id)}">Delete</button></td>
+      <td class="actions">
+        <button class="btn-edit" data-action="edit" data-id="${escapeHtml(m.id)}">Edit</button>
+        <button class="btn-small" data-action="delete" data-id="${escapeHtml(m.id)}">Delete</button>
+      </td>
     </tr>`;
   }).join("");
 }
 
 $("search").addEventListener("input", renderTable);
 
-// ---------- Table buttons: mark present and delete ----------
+// ---------- Table buttons: present, edit, delete ----------
 $("memberRows").addEventListener("click", async (e) => {
   const action = e.target.dataset.action;
   const id = e.target.dataset.id;
@@ -270,7 +300,6 @@ $("memberRows").addEventListener("click", async (e) => {
 
   if (action === "present") {
     const member = allMembers.find((m) => m.id === id);
-    // One record per member per day: the id combines the date and member id
     await setDoc(doc(db, "attendance", `${todayStr()}_${id}`), {
       memberId: id,
       name: member ? member.name : "",
@@ -279,40 +308,80 @@ $("memberRows").addEventListener("click", async (e) => {
     });
   }
 
+  if (action === "edit") {
+    const member = allMembers.find((m) => m.id === id);
+    if (member) startEdit(member);
+  }
+
   if (action === "delete" && confirm("Delete this member?")) {
     await deleteDoc(doc(db, "members", id));
+    if (editingId === id) resetForm();
   }
 });
 
-// ---------- Add member ----------
-$("addBtn").addEventListener("click", async () => {
-  const name = $("mName").value.trim();
-  const phone = $("mPhone").value.trim();
-  const feeStart = $("mFeeStart").value;
-  const feeAmount = $("mFee").value.trim();
+// ---------- Form: add or edit ----------
+const formFields = {
+  name: "fName", phone: "fPhone", email: "fEmail", address: "fAddress",
+  dob: "fDob", emName: "fEmName", emPhone: "fEmPhone", joinDate: "fJoin",
+  feeStart: "fFeeStart", feeAmount: "fFee", shift: "fShift", notes: "fNotes"
+};
 
-  if (!name || !phone || !feeStart) {
-    $("addMsg").style.color = "#c62828";
-    $("addMsg").textContent = "Please enter name, phone, and fee start date.";
+function startEdit(member) {
+  editingId = member.id;
+  for (const [key, inputId] of Object.entries(formFields)) {
+    $(inputId).value = member[key] ?? (key === "shift" ? "Morning" : "");
+  }
+  $("formTitle").textContent = "Edit member";
+  $("saveBtn").textContent = "Save changes";
+  $("cancelBtn").classList.remove("hidden");
+  $("formMsg").textContent = "";
+  $("fName").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function resetForm() {
+  editingId = null;
+  for (const inputId of Object.values(formFields)) {
+    $(inputId).value = "";
+  }
+  $("fShift").value = "Morning";
+  $("formTitle").textContent = "Add member";
+  $("saveBtn").textContent = "Add member";
+  $("cancelBtn").classList.add("hidden");
+}
+
+$("cancelBtn").addEventListener("click", resetForm);
+
+$("saveBtn").addEventListener("click", async () => {
+  const data = {};
+  for (const [key, inputId] of Object.entries(formFields)) {
+    data[key] = $(inputId).value.trim();
+  }
+  data.feeAmount = data.feeAmount || "0";
+
+  if (!data.name || !data.phone || !data.feeStart) {
+    $("formMsg").style.color = "#c62828";
+    $("formMsg").textContent = "Please fill in name, phone, and fee start date.";
     return;
   }
 
+  $("saveBtn").disabled = true;
   try {
-    await addDoc(collection(db, "members"), {
-      name,
-      phone,
-      joinDate: $("mJoin").value || feeStart,
-      feeStart,
-      feeAmount: feeAmount || "0",
-      shift: $("mShift").value,
-      createdAt: new Date()
-    });
-    $("addMsg").style.color = "#2e7d32";
-    $("addMsg").textContent = "Member added.";
-    ["mName", "mPhone", "mJoin", "mFeeStart", "mFee"].forEach((id) => $(id).value = "");
+    if (editingId) {
+      await updateDoc(doc(db, "members", editingId), { ...data, updatedAt: new Date() });
+      $("formMsg").style.color = "#2e7d32";
+      $("formMsg").textContent = "Changes saved.";
+      resetForm();
+    } else {
+      await addDoc(collection(db, "members"), { ...data, createdAt: new Date() });
+      $("formMsg").style.color = "#2e7d32";
+      $("formMsg").textContent = "Member added.";
+      resetForm();
+    }
   } catch (err) {
-    $("addMsg").style.color = "#c62828";
-    $("addMsg").textContent = "Error: " + err.message;
+    $("formMsg").style.color = "#c62828";
+    $("formMsg").textContent = "Error: " + err.message;
+  } finally {
+    $("saveBtn").disabled = false;
   }
 });
 </script>
