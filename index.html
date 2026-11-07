@@ -1,36 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gym System Login</title>
+<title>Gym Admin</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #f2f2f2; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-  .card { background: #fff; padding: 24px; border-radius: 10px; width: 90%; max-width: 360px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  input { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-  button { width: 100%; padding: 12px; background: #e53935; color: #fff; border: none; border-radius: 6px; font-size: 16px; margin-top: 8px; }
-  #msg { color: #c62828; margin-top: 10px; min-height: 20px; }
+  :root { --red:#e53935; --dark:#1e1e2d; --bg:#f4f6fb; --card:#fff; --green:#2e7d32; --amber:#f9a825; --muted:#6b7280; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, sans-serif; background: var(--bg); color:#222; min-height:100vh; }
+  .login-wrap { min-height:100vh; display:flex; justify-content:center; align-items:center; background: linear-gradient(135deg,#1e1e2d,#e53935); padding:16px; }
+  .card { background:var(--card); padding:24px; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+  .login-card { width:100%; max-width:360px; }
+  h1 { margin:0 0 4px; font-size:24px; }
+  h2 { margin:0 0 12px; font-size:18px; }
+  .sub { color:var(--muted); margin:0 0 16px; font-size:14px; }
+  .label { display:block; color:var(--muted); font-size:13px; margin-top:8px; }
+  input, select { width:100%; padding:12px; margin:6px 0; border:1px solid #d1d5db; border-radius:8px; font-size:16px; background:#fff; }
+  button { padding:12px 16px; border:none; border-radius:8px; font-size:15px; cursor:pointer; color:#fff; background:var(--red); }
+  button:hover { opacity:0.92; }
+  .btn-full { width:100%; margin-top:8px; }
+  .btn-dark { background:#374151; }
+  .btn-small { padding:6px 10px; font-size:13px; background:#ef4444; }
+  .msg { min-height:20px; margin-top:10px; font-size:14px; color:#c62828; }
+  header { background:var(--dark); color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+  header h1 { color:#fff; font-size:20px; }
+  header span { font-size:13px; opacity:0.8; }
+  .container { max-width:1100px; margin:0 auto; padding:16px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:16px; }
+  .stat { background:var(--card); border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:5px solid var(--red); }
+  .stat.green { border-color:var(--green); }
+  .stat.amber { border-color:var(--amber); }
+  .stat .num { font-size:28px; font-weight:bold; }
+  .stat .lbl { color:var(--muted); font-size:13px; }
+  .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
+  @media (min-width:800px) { .grid { grid-template-columns: 340px 1fr; } }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #eee; white-space:nowrap; }
+  th { color:var(--muted); font-weight:600; font-size:13px; }
+  .badge { padding:4px 8px; border-radius:20px; font-size:12px; color:#fff; }
+  .b-ok { background:var(--green); }
+  .b-soon { background:var(--amber); color:#222; }
+  .b-exp { background:#c62828; }
+  .hidden { display:none !important; }
 </style>
 </head>
 <body>
 
-<div class="card" id="loginBox">
-  <h2>Gym Login</h2>
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-  <button id="loginBtn">Login</button>
-  <div id="msg"></div>
+<!-- LOGIN -->
+<div class="login-wrap" id="loginBox">
+  <div class="card login-card">
+    <h1>Gym Login</h1>
+    <p class="sub">Owner and staff sign in</p>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button class="btn-full" id="loginBtn">Login</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
 </div>
 
-<div class="card" id="homeBox" style="display:none">
-  <h2>Welcome</h2>
-  <p id="userEmail"></p>
-  <button id="logoutBtn">Logout</button>
+<!-- ADMIN -->
+<div id="adminBox" class="hidden">
+  <header>
+    <div>
+      <h1>Gym Admin</h1>
+      <span id="userEmail"></span>
+    </div>
+    <button class="btn-dark" id="logoutBtn">Logout</button>
+  </header>
+
+  <div class="container">
+    <div class="stats">
+      <div class="stat"><div class="num" id="totalCount">0</div><div class="lbl">Total members</div></div>
+      <div class="stat green"><div class="num" id="activeCount">0</div><div class="lbl">Active fees</div></div>
+      <div class="stat amber"><div class="num" id="soonCount">0</div><div class="lbl">Expiring in 5 days</div></div>
+      <div class="stat"><div class="num" id="expiredCount">0</div><div class="lbl">Expired fees</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Add member</h2>
+        <input id="mName" placeholder="Full name">
+        <input id="mPhone" placeholder="Phone number">
+        <label class="label" for="mJoin">Joining date</label>
+        <input id="mJoin" type="date">
+        <label class="label" for="mFeeStart">Fee start date</label>
+        <input id="mFeeStart" type="date">
+        <input id="mFee" type="number" placeholder="Fee amount (PKR)">
+        <select id="mShift">
+          <option value="Morning">Morning shift</option>
+          <option value="Evening">Evening shift</option>
+        </select>
+        <button class="btn-full" id="addBtn">Add member</button>
+        <div class="msg" id="addMsg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Members</h2>
+        <input id="search" placeholder="Search by name or phone">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Phone</th><th>Shift</th><th>Fee</th><th>Fee status</th><th></th></tr>
+            </thead>
+            <tbody id="memberRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBRuTpQTgzJoHPSGSkRDW9GLw6r4LjJpjM",
@@ -43,32 +127,147 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-const loginBox = document.getElementById("loginBox");
-const homeBox = document.getElementById("homeBox");
-const msg = document.getElementById("msg");
+const $ = (id) => document.getElementById(id);
+let allMembers = [];
+let unsubscribe = null;
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  msg.textContent = "";
+// ---------- Login ----------
+$("loginBtn").addEventListener("click", async () => {
+  $("loginMsg").textContent = "";
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
   } catch (err) {
-    msg.textContent = "Login failed. Check your email and password.";
+    $("loginMsg").textContent = "Login failed. Check your email and password.";
   }
 });
 
-document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+$("logoutBtn").addEventListener("click", () => signOut(auth));
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    loginBox.style.display = "none";
-    homeBox.style.display = "block";
-    document.getElementById("userEmail").textContent = "Logged in as " + user.email;
+    $("loginBox").classList.add("hidden");
+    $("adminBox").classList.remove("hidden");
+    $("userEmail").textContent = "Logged in as " + user.email;
+    startListening();
   } else {
-    loginBox.style.display = "block";
-    homeBox.style.display = "none";
+    $("loginBox").classList.remove("hidden");
+    $("adminBox").classList.add("hidden");
+    if (unsubscribe) unsubscribe();
+  }
+});
+
+// ---------- Helpers ----------
+function escapeHtml(text) {
+  return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+// Fee lasts 30 days from the fee start date
+function daysLeft(feeStart) {
+  if (!feeStart) return null;
+  const end = new Date(feeStart + "T00:00:00");
+  end.setDate(end.getDate() + 30);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+}
+
+function badge(days) {
+  if (days === null) return "-";
+  if (days < 0) return `<span class="badge b-exp">Expired ${Math.abs(days)} days ago</span>`;
+  if (days <= 5) return `<span class="badge b-soon">${days} days left</span>`;
+  return `<span class="badge b-ok">${days} days left</span>`;
+}
+
+// ---------- Live data from Firestore ----------
+function startListening() {
+  if (unsubscribe) unsubscribe();
+  const q = query(collection(db, "members"), orderBy("name"));
+  unsubscribe = onSnapshot(q, (snapshot) => {
+    allMembers = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderTable();
+  }, (err) => {
+    $("memberRows").innerHTML = `<tr><td colspan="6">Could not load members: ${escapeHtml(err.message)}</td></tr>`;
+  });
+}
+
+function renderStats() {
+  let active = 0, soon = 0, expired = 0;
+  allMembers.forEach((m) => {
+    const d = daysLeft(m.feeStart);
+    if (d === null) return;
+    if (d < 0) expired++;
+    else if (d <= 5) soon++;
+    else active++;
+  });
+  $("totalCount").textContent = allMembers.length;
+  $("activeCount").textContent = active;
+  $("soonCount").textContent = soon;
+  $("expiredCount").textContent = expired;
+}
+
+function renderTable() {
+  const term = $("search").value.trim().toLowerCase();
+  const list = allMembers.filter((m) =>
+    !term || (m.name || "").toLowerCase().includes(term) || (m.phone || "").includes(term)
+  );
+  if (list.length === 0) {
+    $("memberRows").innerHTML = `<tr><td colspan="6">No members found.</td></tr>`;
+    return;
+  }
+  $("memberRows").innerHTML = list.map((m) => `
+    <tr>
+      <td>${escapeHtml(m.name)}</td>
+      <td>${escapeHtml(m.phone)}</td>
+      <td>${escapeHtml(m.shift)}</td>
+      <td>${escapeHtml(m.feeAmount)}</td>
+      <td>${badge(daysLeft(m.feeStart))}</td>
+      <td><button class="btn-small" data-id="${escapeHtml(m.id)}">Delete</button></td>
+    </tr>`).join("");
+}
+
+$("search").addEventListener("input", renderTable);
+
+// Delete a member
+$("memberRows").addEventListener("click", async (e) => {
+  const id = e.target.dataset.id;
+  if (!id) return;
+  if (confirm("Delete this member?")) {
+    await deleteDoc(doc(db, "members", id));
+  }
+});
+
+// ---------- Add member ----------
+$("addBtn").addEventListener("click", async () => {
+  const name = $("mName").value.trim();
+  const phone = $("mPhone").value.trim();
+  const feeStart = $("mFeeStart").value;
+  const feeAmount = $("mFee").value.trim();
+
+  if (!name || !phone || !feeStart) {
+    $("addMsg").style.color = "#c62828";
+    $("addMsg").textContent = "Please enter name, phone, and fee start date.";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "members"), {
+      name,
+      phone,
+      joinDate: $("mJoin").value || feeStart,
+      feeStart,
+      feeAmount: feeAmount || "0",
+      shift: $("mShift").value,
+      createdAt: new Date()
+    });
+    $("addMsg").style.color = "#2e7d32";
+    $("addMsg").textContent = "Member added.";
+    ["mName", "mPhone", "mJoin", "mFeeStart", "mFee"].forEach((id) => $(id).value = "");
+  } catch (err) {
+    $("addMsg").style.color = "#c62828";
+    $("addMsg").textContent = "Error: " + err.message;
   }
 });
 </script>
