@@ -16,12 +16,13 @@
   .sub { color:var(--muted); margin:0 0 16px; font-size:14px; }
   .label { display:block; color:var(--muted); font-size:13px; margin-top:8px; }
   input, select, textarea { width:100%; padding:12px; margin:6px 0; border:1px solid #d1d5db; border-radius:8px; font-size:16px; background:#fff; font-family:inherit; }
-  textarea { min-height:70px; resize:vertical; }
+  textarea { min-height:90px; resize:vertical; }
   button { padding:12px 16px; border:none; border-radius:8px; font-size:15px; cursor:pointer; color:#fff; background:var(--red); }
   button:hover { opacity:0.92; }
   button:disabled { background:#9ca3af; cursor:default; }
   .btn-full { width:100%; margin-top:8px; }
   .btn-dark { background:#374151; }
+  .btn-quick { background:#f3f4f6; color:#222; padding:8px 12px; font-size:13px; margin:4px 4px 0 0; border:1px solid #d1d5db; }
   .btn-small { padding:6px 10px; font-size:13px; background:#ef4444; }
   .btn-edit { padding:6px 10px; font-size:13px; background:#1e88e5; }
   .btn-pay { padding:6px 10px; font-size:13px; background:#8e24aa; }
@@ -40,6 +41,8 @@
   .stat.purple { border-color:#8e24aa; }
   .stat .num { font-size:26px; font-weight:bold; }
   .stat .lbl { color:var(--muted); font-size:13px; }
+  .notice-banner { background:#fff8e1; border-left:5px solid var(--amber); border-radius:10px; padding:14px 16px; margin-bottom:16px; }
+  .notice-banner strong { display:block; margin-bottom:4px; }
   .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
   @media (min-width:800px) { .grid { grid-template-columns: 360px 1fr; align-items:start; } }
   .table-wrap { overflow-x:auto; }
@@ -54,6 +57,8 @@
   .b-soon { background:var(--amber); color:#222; }
   .b-exp { background:#c62828; }
   .section-gap { margin-top:16px; }
+  .notice-item { border-bottom:1px solid #eee; padding:12px 0; }
+  .notice-item:last-child { border-bottom:none; }
 </style>
 </head>
 <body>
@@ -81,6 +86,11 @@
   </header>
 
   <div class="container">
+    <div class="notice-banner hidden" id="latestNoticeBox">
+      <strong>Latest notice to members</strong>
+      <span id="latestNotice"></span>
+    </div>
+
     <div class="stats">
       <div class="stat"><div class="num" id="totalCount">0</div><div class="lbl">Total members</div></div>
       <div class="stat blue"><div class="num" id="presentCount">0</div><div class="lbl">Present today</div></div>
@@ -112,7 +122,7 @@
             <option value="Morning">Morning shift</option>
             <option value="Evening">Evening shift</option>
           </select>
-          <textarea id="fNotes" placeholder="Notes (optional)"></textarea>
+          <textarea id="fNotes" placeholder="Notes (optional)" style="min-height:70px"></textarea>
           <button class="btn-full" id="saveBtn">Add member</button>
           <button class="btn-full btn-dark hidden" id="cancelBtn">Cancel editing</button>
           <div class="msg" id="formMsg"></div>
@@ -136,6 +146,19 @@
           </select>
           <button class="btn-full" id="payBtn">Save payment</button>
           <div class="msg" id="payMsg"></div>
+        </div>
+
+        <!-- NOTICES -->
+        <div class="card section-gap">
+          <h2>Post notice to members</h2>
+          <div>
+            <button class="btn-quick" data-quick="Gym is closed today. Sorry for the inconvenience.">Gym closed today</button>
+            <button class="btn-quick" data-quick="Gym timings have changed. Please check with the reception.">Timings changed</button>
+            <button class="btn-quick" data-quick="Reminder: Please renew your fee to keep training without a break.">Fee reminder</button>
+          </div>
+          <textarea id="noticeText" placeholder="Write a message for members..."></textarea>
+          <button class="btn-full" id="noticeBtn">Post notice</button>
+          <div class="msg" id="noticeMsg"></div>
         </div>
       </div>
 
@@ -166,6 +189,12 @@
             </table>
           </div>
         </div>
+
+        <!-- NOTICE HISTORY -->
+        <div class="card section-gap">
+          <h2>Notices sent</h2>
+          <div id="noticeList"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -192,8 +221,9 @@ const db = getFirestore(app);
 const $ = (id) => document.getElementById(id);
 let allMembers = [];
 let allPayments = [];
+let allNotices = [];
 let presentIds = new Set();
-let unsubMembers = null, unsubAttendance = null, unsubPayments = null;
+let unsubMembers = null, unsubAttendance = null, unsubPayments = null, unsubNotices = null;
 let editingId = null;
 
 // ---------- Login ----------
@@ -231,7 +261,6 @@ function todayStr() {
   return new Date().toLocaleDateString("en-CA");
 }
 
-// Fee lasts 30 days from the fee start date
 function daysLeft(feeStart) {
   if (!feeStart) return null;
   const end = new Date(feeStart + "T00:00:00");
@@ -272,13 +301,19 @@ function startListening() {
     renderStats();
     renderPayments();
   });
+
+  unsubNotices = onSnapshot(query(collection(db, "notices"), orderBy("createdAt", "desc")), (snapshot) => {
+    allNotices = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderNotices();
+  });
 }
 
 function stopListening() {
   if (unsubMembers) unsubMembers();
   if (unsubAttendance) unsubAttendance();
   if (unsubPayments) unsubPayments();
-  unsubMembers = unsubAttendance = unsubPayments = null;
+  if (unsubNotices) unsubNotices();
+  unsubMembers = unsubAttendance = unsubPayments = unsubNotices = null;
 }
 
 function renderStats() {
@@ -291,7 +326,6 @@ function renderStats() {
     else active++;
   });
 
-  // Total collected in the current month
   const monthPrefix = todayStr().slice(0, 7);
   const collected = allPayments
     .filter((p) => (p.date || "").startsWith(monthPrefix))
@@ -367,7 +401,60 @@ function renderMemberDropdown() {
   if (current) $("payMember").value = current;
 }
 
+function renderNotices() {
+  if (allNotices.length === 0) {
+    $("latestNoticeBox").classList.add("hidden");
+    $("noticeList").innerHTML = `<p class="small">No notices yet.</p>`;
+    return;
+  }
+
+  const latest = allNotices[0];
+  $("latestNotice").textContent = " " + latest.text;
+  $("latestNoticeBox").classList.remove("hidden");
+
+  $("noticeList").innerHTML = allNotices.slice(0, 30).map((n) => `
+    <div class="notice-item">
+      <div>${escapeHtml(n.text)}</div>
+      <div class="small">${escapeHtml(n.date)}</div>
+      <button class="btn-small" style="margin-top:6px" data-action="delete-notice" data-id="${escapeHtml(n.id)}">Delete notice</button>
+    </div>`).join("");
+}
+
 $("search").addEventListener("input", renderTable);
+
+// ---------- Quick notice buttons ----------
+document.querySelectorAll("[data-quick]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    $("noticeText").value = btn.dataset.quick;
+  });
+});
+
+// ---------- Post notice ----------
+$("noticeBtn").addEventListener("click", async () => {
+  const text = $("noticeText").value.trim();
+  if (!text) {
+    $("noticeMsg").style.color = "#c62828";
+    $("noticeMsg").textContent = "Please write a message first.";
+    return;
+  }
+
+  $("noticeBtn").disabled = true;
+  try {
+    await addDoc(collection(db, "notices"), {
+      text,
+      date: todayStr(),
+      createdAt: new Date()
+    });
+    $("noticeMsg").style.color = "#2e7d32";
+    $("noticeMsg").textContent = "Notice posted.";
+    $("noticeText").value = "";
+  } catch (err) {
+    $("noticeMsg").style.color = "#c62828";
+    $("noticeMsg").textContent = "Error: " + err.message;
+  } finally {
+    $("noticeBtn").disabled = false;
+  }
+});
 
 // ---------- Table buttons: present, pay, edit, delete ----------
 $("memberRows").addEventListener("click", async (e) => {
@@ -405,6 +492,14 @@ $("memberRows").addEventListener("click", async (e) => {
   }
 });
 
+// ---------- Delete notice ----------
+$("noticeList").addEventListener("click", async (e) => {
+  if (e.target.dataset.action !== "delete-notice") return;
+  if (confirm("Delete this notice?")) {
+    await deleteDoc(doc(db, "notices", e.target.dataset.id));
+  }
+});
+
 // ---------- Record payment ----------
 $("payBtn").addEventListener("click", async () => {
   const memberId = $("payMember").value;
@@ -421,7 +516,6 @@ $("payBtn").addEventListener("click", async () => {
   const member = allMembers.find((m) => m.id === memberId);
   $("payBtn").disabled = true;
   try {
-    // Save the payment in history
     await addDoc(collection(db, "payments"), {
       memberId,
       name: member ? member.name : "",
@@ -430,7 +524,6 @@ $("payBtn").addEventListener("click", async () => {
       method,
       createdAt: new Date()
     });
-    // Restart the member's fee from the payment date
     await updateDoc(doc(db, "members", memberId), { feeStart: date, feeAmount: amount });
 
     $("payMsg").style.color = "#2e7d32";
