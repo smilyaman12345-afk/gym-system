@@ -33,6 +33,11 @@
   .dumbbell { animation: spin3d 6s linear infinite; transform-style: preserve-3d; }
   .login-card { width: 100%; max-width: 380px; }
 
+  .tabs { display:flex; gap:8px; margin-bottom:12px; }
+  .tab { flex:1; padding:10px; border:2px solid #e0e7ff; border-radius:12px; background:#fff; color:#5f27cd; font-weight:bold; cursor:pointer; font-size:14px; }
+  .tab.active { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-color:transparent; }
+  .step-note { font-size:13px; color:#555; margin:4px 0 8px; }
+
   /* 3D glass cards */
   .glass {
     background: rgba(255,255,255,.94); border-radius: 22px; padding: 20px;
@@ -43,6 +48,7 @@
 
   .field { width:100%; padding:14px; margin:8px 0; border:2px solid #e0e7ff; border-radius:14px; font-size:16px; outline:none; background:#fff; }
   .field:focus { border-color:#764ba2; }
+  .field-label { display:block; font-size:13px; color:#555; margin-top:6px; }
 
   .btn {
     width:100%; background: linear-gradient(135deg,#ff6b6b,#feca57); color:#fff; border:none;
@@ -51,7 +57,9 @@
   }
   .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c44569; }
   .btn:disabled { background:#9ca3af; box-shadow:0 6px 0 #6b7280; cursor:default; }
+  .btn-sec { background: linear-gradient(135deg,#5f27cd,#48dbfb); box-shadow: 0 6px 0 #341f97; margin-top:10px; }
   .btn-ghost { background: rgba(255,255,255,.2); color:#fff; border:2px solid #fff; padding:8px 14px; border-radius:12px; cursor:pointer; font-weight:bold; }
+  .btn-link { background:none; border:none; color:#5f27cd; font-size:14px; cursor:pointer; padding:8px 0; box-shadow:none; width:auto; text-decoration:underline; }
 
   .msg { min-height:20px; margin-top:10px; font-size:14px; color:#c62828; }
   .msg.ok { color:#10ac84; }
@@ -120,7 +128,7 @@
 <div class="blob b2"></div>
 <div class="blob b3"></div>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN / CREATE ACCOUNT SCREEN -->
 <section id="loginScreen" class="login-wrap">
   <div style="text-align:center">
     <svg class="dumbbell" viewBox="0 0 200 120" width="200" height="120">
@@ -134,12 +142,41 @@
     <p>Check your fee, attendance and notices</p>
   </div>
 
-  <div class="glass login-card tilt">
-    <h3>Member Login</h3>
-    <input class="field" id="phone" type="tel" inputmode="numeric" placeholder="📱 Phone number (e.g. 03001234567)">
-    <input class="field" id="password" type="password" placeholder="🔒 Password">
-    <button class="btn" id="loginBtn">Login 🚀</button>
-    <div class="msg" id="loginMsg"></div>
+  <div class="glass login-card">
+    <div class="tabs">
+      <button class="tab active" id="tabLogin">Login</button>
+      <button class="tab" id="tabSignup">Create account</button>
+    </div>
+
+    <!-- LOGIN SECTION -->
+    <div id="loginSection">
+      <input class="field" id="phone" type="tel" inputmode="numeric" placeholder="📱 Phone number (e.g. 03001234567)">
+      <input class="field" id="password" type="password" placeholder="🔒 Password">
+      <button class="btn" id="loginBtn">Login 🚀</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+
+    <!-- CREATE ACCOUNT SECTION -->
+    <div id="signupSection" class="hidden">
+      <div id="stepOne">
+        <p class="step-note">Enter the same details the gym has for you, then we'll let you set a password.</p>
+        <input class="field" id="sName" placeholder="👤 Full name (as given to the gym)">
+        <input class="field" id="sPhone" type="tel" inputmode="numeric" placeholder="📱 Phone number (e.g. 03001234567)">
+        <label class="field-label" for="sDob">Date of birth</label>
+        <input class="field" id="sDob" type="date">
+        <button class="btn" id="verifyBtn">Check my details ✔️</button>
+      </div>
+
+      <div id="stepTwo" class="hidden">
+        <p class="step-note">Choose a password you'll remember. You can change it later from your dashboard.</p>
+        <input class="field" id="sPass" type="password" placeholder="🔒 New password (min 6 characters)">
+        <input class="field" id="sPass2" type="password" placeholder="🔒 Confirm password">
+        <button class="btn" id="createBtn">Create my account 🎉</button>
+        <button class="btn-link" id="backBtn">← Back</button>
+      </div>
+
+      <div class="msg" id="signMsg"></div>
+    </div>
   </div>
 </section>
 
@@ -201,13 +238,31 @@
         <div id="payments"></div>
       </div>
     </div>
+
+    <!-- ACCOUNT -->
+    <div class="glass tilt">
+      <h3>🔐 My Account</h3>
+      <button class="btn btn-sec" id="showCpBtn">Change password</button>
+      <div id="cpPanel" class="hidden" style="margin-top:12px">
+        <input class="field" id="cpCurrent" type="password" placeholder="Current password">
+        <input class="field" id="cpNew" type="password" placeholder="New password (min 6 characters)">
+        <input class="field" id="cpNew2" type="password" placeholder="Confirm new password">
+        <button class="btn" id="cpSaveBtn">Save new password</button>
+      </div>
+      <div class="msg" id="cpMsg"></div>
+    </div>
   </div>
 </section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword, EmailAuthProvider, reauthenticateWithCredential, updatePassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBRuTpQTgzJoHPSGSkRDW9GLw6r4LjJpjM",
@@ -228,6 +283,7 @@ let unsubs = [];
 let attendanceDates = new Set();
 let payments = [];
 let notices = [];
+let verified = null; // set after the signup details match a gym record
 
 // ---------- Motivational quotes ----------
 const quotes = [
@@ -267,6 +323,7 @@ document.addEventListener("pointermove", (e) => {
 
 // ---------- Helpers ----------
 function digits(s) { return String(s || "").replace(/\D/g, ""); }
+function normName(s) { return String(s || "").toLowerCase().replace(/\s+/g, " ").trim(); }
 function todayStr() { return new Date().toLocaleDateString("en-CA"); }
 function esc(text) {
   return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
@@ -284,32 +341,159 @@ function daysLeft(feeStart) {
   today.setHours(0, 0, 0, 0);
   return Math.ceil((end - today) / (1000 * 60 * 60 * 24));
 }
+function setMsg(id, text, ok = false) {
+  const el = $(id);
+  el.className = "msg" + (ok ? " ok" : "");
+  el.textContent = text;
+}
+function friendlyError(err) {
+  const code = err.code || "";
+  if (code === "auth/email-already-in-use") return "This phone number already has a login. Please use the Login tab.";
+  if (code === "auth/weak-password") return "Password must be at least 6 characters.";
+  if (code === "auth/invalid-credential" || code === "auth/wrong-password") return "Wrong password. Please try again.";
+  if (code === "auth/too-many-requests") return "Too many attempts. Please wait a few minutes and try again.";
+  return err.message || String(err);
+}
 function showScreen(name) {
   $("loginScreen").classList.toggle("hidden", name !== "login");
   $("dashScreen").classList.toggle("hidden", name !== "dash");
 }
 
+// ---------- Login / signup tabs ----------
+function showTab(name) {
+  $("tabLogin").classList.toggle("active", name === "login");
+  $("tabSignup").classList.toggle("active", name === "signup");
+  $("loginSection").classList.toggle("hidden", name !== "login");
+  $("signupSection").classList.toggle("hidden", name !== "signup");
+  setMsg("loginMsg", "");
+  setMsg("signMsg", "");
+}
+$("tabLogin").addEventListener("click", () => showTab("login"));
+$("tabSignup").addEventListener("click", () => showTab("signup"));
+
 // ---------- Login ----------
 $("loginBtn").addEventListener("click", async () => {
   const phone = digits($("phone").value);
   const password = $("password").value;
-  $("loginMsg").textContent = "";
+  setMsg("loginMsg", "");
   if (!phone || !password) {
-    $("loginMsg").textContent = "Enter your phone number and password.";
+    setMsg("loginMsg", "Enter your phone number and password.");
     return;
   }
   $("loginBtn").disabled = true;
   try {
     await signInWithEmailAndPassword(auth, phone + "@gym.local", password);
   } catch (err) {
-    $("loginMsg").textContent = "Wrong phone number or password.";
+    setMsg("loginMsg", "Wrong phone number or password.");
   } finally {
     $("loginBtn").disabled = false;
   }
 });
 
+// ---------- Create account: step 1 (check details) ----------
+$("verifyBtn").addEventListener("click", async () => {
+  setMsg("signMsg", "");
+  const name = $("sName").value;
+  const phone = digits($("sPhone").value);
+  const dob = $("sDob").value;
+
+  if (!name.trim() || !phone || !dob) {
+    setMsg("signMsg", "Please fill in your name, phone number and date of birth.");
+    return;
+  }
+
+  $("verifyBtn").disabled = true;
+  try {
+    const snap = await getDocs(query(collection(db, "members"), where("phone", "==", phone)));
+    const match = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .find((m) => normName(m.name) === normName(name) && m.dob === dob);
+
+    if (!match) {
+      setMsg("signMsg", "These details don't match our gym records. Please check them, or ask the gym to help.");
+      return;
+    }
+
+    verified = { id: match.id, phone };
+    $("stepOne").classList.add("hidden");
+    $("stepTwo").classList.remove("hidden");
+    setMsg("signMsg", "✅ Details confirmed. Now set your password.", true);
+  } catch (err) {
+    setMsg("signMsg", "Could not check your details: " + err.message);
+  } finally {
+    $("verifyBtn").disabled = false;
+  }
+});
+
+$("backBtn").addEventListener("click", () => {
+  verified = null;
+  $("stepTwo").classList.add("hidden");
+  $("stepOne").classList.remove("hidden");
+  $("sPass").value = "";
+  $("sPass2").value = "";
+  setMsg("signMsg", "");
+});
+
+// ---------- Create account: step 2 (set password) ----------
+$("createBtn").addEventListener("click", async () => {
+  if (!verified) return;
+  const pw = $("sPass").value;
+  const pw2 = $("sPass2").value;
+
+  if (pw.length < 6) { setMsg("signMsg", "Password must be at least 6 characters."); return; }
+  if (pw !== pw2) { setMsg("signMsg", "The two passwords don't match."); return; }
+
+  $("createBtn").disabled = true;
+  try {
+    await createUserWithEmailAndPassword(auth, verified.phone + "@gym.local", pw);
+    // Mark the gym record as having a login. The member is signed in now.
+    await updateDoc(doc(db, "members", verified.id), { hasLogin: true });
+    verified = null;
+  } catch (err) {
+    setMsg("signMsg", friendlyError(err));
+  } finally {
+    $("createBtn").disabled = false;
+  }
+});
+
+// ---------- Logout ----------
 $("logoutBtn").addEventListener("click", () => signOut(auth));
 
+// ---------- Change password (from dashboard) ----------
+$("showCpBtn").addEventListener("click", () => {
+  $("cpPanel").classList.toggle("hidden");
+  setMsg("cpMsg", "");
+});
+
+$("cpSaveBtn").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  const current = $("cpCurrent").value;
+  const next = $("cpNew").value;
+  const next2 = $("cpNew2").value;
+
+  if (!user) return;
+  if (!current) { setMsg("cpMsg", "Enter your current password."); return; }
+  if (next.length < 6) { setMsg("cpMsg", "New password must be at least 6 characters."); return; }
+  if (next !== next2) { setMsg("cpMsg", "The new passwords don't match."); return; }
+
+  $("cpSaveBtn").disabled = true;
+  try {
+    // Confirm the current password first, then change it
+    const cred = EmailAuthProvider.credential(user.email, current);
+    await reauthenticateWithCredential(user, cred);
+    await updatePassword(user, next);
+    $("cpCurrent").value = "";
+    $("cpNew").value = "";
+    $("cpNew2").value = "";
+    setMsg("cpMsg", "Password changed successfully. ✅", true);
+  } catch (err) {
+    setMsg("cpMsg", friendlyError(err));
+  } finally {
+    $("cpSaveBtn").disabled = false;
+  }
+});
+
+// ---------- Auth state: find the member record for this login ----------
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     stopAll();
@@ -323,12 +507,13 @@ onAuthStateChanged(auth, async (user) => {
   const snap = await getDocs(query(collection(db, "members"), where("phone", "==", phone)));
 
   if (snap.empty) {
-    $("loginMsg").textContent = "This login is not linked to a gym member. Please contact the gym.";
+    setMsg("loginMsg", "This login is not linked to a gym member. Please contact the gym.");
     await signOut(auth);
     return;
   }
 
   member = { id: snap.docs[0].id, ...snap.docs[0].data() };
+  $("userNameTop") && ($("userNameTop").textContent = member.name);
   showScreen("dash");
   startListening();
 });
@@ -370,7 +555,6 @@ function renderAll() {
 
   $("memberName").textContent = member.name || "Member";
 
-  // Fee ring and status
   const days = daysLeft(member.feeStart);
   const pct = days === null ? 0 : Math.max(0, Math.min(100, (days / 30) * 100));
   $("ring").style.setProperty("--p", pct + "%");
@@ -384,7 +568,6 @@ function renderAll() {
   else if (days <= 5) { pill.textContent = "Renew soon ⏰"; pill.className = "pill warn"; }
   else { pill.textContent = "Active ✅"; pill.className = "pill good"; }
 
-  // Check-in button
   const doneToday = attendanceDates.has(today);
   $("checkinBtn").disabled = doneToday;
   $("checkinBtn").textContent = doneToday ? "Checked in today 🎉" : "I'm here today ✅";
@@ -392,7 +575,6 @@ function renderAll() {
     ? "Great job! Your attendance is recorded."
     : "Did you train today? Tap below to check in.";
 
-  // Stats
   const monthPrefix = today.slice(0, 7);
   const visitsThisMonth = [...attendanceDates].filter((d) => d.startsWith(monthPrefix)).length;
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
@@ -456,10 +638,9 @@ $("checkinBtn").addEventListener("click", async () => {
       date: today,
       time: new Date().toLocaleTimeString()
     });
-    $("checkMsg").textContent = "Checked in! Have a great workout 💪";
+    setMsg("checkMsg", "Checked in! Have a great workout 💪", true);
   } catch (err) {
-    $("checkMsg").style.color = "#c62828";
-    $("checkMsg").textContent = "Could not check in: " + err.message;
+    setMsg("checkMsg", "Could not check in: " + err.message);
     $("checkinBtn").disabled = false;
   }
 });
