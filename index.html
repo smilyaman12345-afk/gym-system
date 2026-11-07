@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym System Login</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f2f2f2; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+  .card { background: #fff; padding: 24px; border-radius: 10px; width: 90%; max-width: 360px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  input { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+  button { width: 100%; padding: 12px; background: #e53935; color: #fff; border: none; border-radius: 6px; font-size: 16px; margin-top: 8px; }
+  #msg { color: #c62828; margin-top: 10px; min-height: 20px; }
+</style>
+</head>
+<body>
+
+<div class="card" id="loginBox">
+  <h2>Gym Login</h2>
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button id="loginBtn">Login</button>
+  <div id="msg"></div>
+</div>
+
+<div class="card" id="homeBox" style="display:none">
+  <h2>Welcome</h2>
+  <p id="userEmail"></p>
+  <button id="logoutBtn">Logout</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBRuTpQTgzJoHPSGSkRDW9GLw6r4LjJpjM",
+  authDomain: "gym-system-82a94.firebaseapp.com",
+  projectId: "gym-system-82a94",
+  storageBucket: "gym-system-82a94.firebasestorage.app",
+  messagingSenderId: "754716077658",
+  appId: "1:754716077658:web:de270bcb6ef08d973ab263"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const loginBox = document.getElementById("loginBox");
+const homeBox = document.getElementById("homeBox");
+const msg = document.getElementById("msg");
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  msg.textContent = "";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    msg.textContent = "Login failed. Check your email and password.";
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginBox.style.display = "none";
+    homeBox.style.display = "block";
+    document.getElementById("userEmail").textContent = "Logged in as " + user.email;
+  } else {
+    loginBox.style.display = "block";
+    homeBox.style.display = "none";
+  }
+});
+</script>
+</body>
+</html>
