@@ -1,1 +1,470 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Gym</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: Arial, Helvetica, sans-serif; min-height: 100vh; color: #222;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+    background-size: 400% 400%; animation: bg 14s ease infinite; overflow-x: hidden;
+  }
+  @keyframes bg { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+  .blob { position: fixed; width: 260px; height: 260px; border-radius: 50%; filter: blur(60px); opacity: .55; z-index: -1; animation: floaty 9s ease-in-out infinite; }
+  .b1 { background:#feca57; top:-60px; left:-60px; }
+  .b2 { background:#48dbfb; bottom:-80px; right:-60px; animation-delay:-3s; }
+  .b3 { background:#ff6b6b; top:40%; left:60%; animation-delay:-6s; }
+  @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+  @keyframes spin3d { from{transform:rotateY(0deg)} to{transform:rotateY(360deg)} }
+
+  .hidden { display: none !important; }
+
+  /* Login */
+  .login-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 20px; }
+  .login-wrap h1 { color:#fff; text-align:center; font-size:28px; margin:0; text-shadow: 0 4px 0 rgba(0,0,0,.2); }
+  .login-wrap p { color:#fff; margin:6px 0 0; text-align:center; opacity:.9; }
+  .dumbbell { animation: spin3d 6s linear infinite; transform-style: preserve-3d; }
+  .login-card { width: 100%; max-width: 380px; }
+
+  /* 3D glass cards */
+  .glass {
+    background: rgba(255,255,255,.94); border-radius: 22px; padding: 20px;
+    box-shadow: 0 10px 0 rgba(0,0,0,.12), 0 20px 40px rgba(0,0,0,.2);
+    transition: transform .15s ease-out; transform-style: preserve-3d;
+  }
+  .glass h3 { margin: 0 0 10px; color: #5f27cd; font-size: 18px; }
+
+  .field { width:100%; padding:14px; margin:8px 0; border:2px solid #e0e7ff; border-radius:14px; font-size:16px; outline:none; background:#fff; }
+  .field:focus { border-color:#764ba2; }
+
+  .btn {
+    width:100%; background: linear-gradient(135deg,#ff6b6b,#feca57); color:#fff; border:none;
+    padding:14px; border-radius:14px; font-size:16px; font-weight:bold; cursor:pointer;
+    box-shadow: 0 6px 0 #c44569, 0 10px 20px rgba(0,0,0,.2); transition: transform .1s, box-shadow .1s;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c44569; }
+  .btn:disabled { background:#9ca3af; box-shadow:0 6px 0 #6b7280; cursor:default; }
+  .btn-ghost { background: rgba(255,255,255,.2); color:#fff; border:2px solid #fff; padding:8px 14px; border-radius:12px; cursor:pointer; font-weight:bold; }
+
+  .msg { min-height:20px; margin-top:10px; font-size:14px; color:#c62828; }
+  .msg.ok { color:#10ac84; }
+
+  /* Dashboard */
+  .top { display:flex; justify-content:space-between; align-items:center; padding:18px 16px; color:#fff; }
+  .top .hi { opacity:.9; font-size:14px; }
+  .top .name { font-size:24px; font-weight:bold; text-shadow:0 3px 0 rgba(0,0,0,.2); }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 30px; display:flex; flex-direction:column; gap:16px; }
+
+  .quote { font-size:17px; font-weight:bold; text-align:center; color:#5f27cd; transition: opacity .4s; min-height:52px; display:flex; align-items:center; justify-content:center; }
+  .quote.fade-out { opacity:0; }
+
+  .grid { display:grid; grid-template-columns:1fr; gap:16px; }
+  @media (min-width:760px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+  .ring {
+    width:120px; height:120px; border-radius:50%; flex-shrink:0;
+    background: conic-gradient(#1dd1a1 var(--p, 0%), #e5e7eb 0);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 8px 16px rgba(0,0,0,.15), inset 0 -6px 0 rgba(0,0,0,.08);
+  }
+  .ring-in { width:92px; height:92px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow: inset 0 4px 8px rgba(0,0,0,.08); }
+  .ring-in span { font-size:30px; font-weight:bold; color:#5f27cd; }
+  .ring-in small { font-size:11px; color:#666; }
+  .fee-row { display:flex; gap:16px; align-items:center; }
+  .fee-row p { margin:4px 0; font-size:14px; }
+
+  .pill { display:inline-block; padding:6px 12px; border-radius:20px; color:#fff; font-size:13px; margin-top:6px; }
+  .good { background:#10ac84; }
+  .warn { background:#f39c12; }
+  .bad { background:#e74c3c; }
+
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .tile { border-radius:16px; padding:14px 8px; color:#fff; text-align:center; box-shadow: 0 6px 0 rgba(0,0,0,.15); transition: transform .15s; }
+  .tile:hover { transform: translateY(-3px) rotateX(8deg); }
+  .tile b { display:block; font-size:22px; }
+  .tile span { font-size:12px; opacity:.95; }
+  .t1 { background:linear-gradient(135deg,#ff6b6b,#ff9f43); }
+  .t2 { background:linear-gradient(135deg,#5f27cd,#48dbfb); }
+  .t3 { background:linear-gradient(135deg,#1dd1a1,#10ac84); }
+
+  .checkin { text-align:center; }
+  .checkin p { margin:0 0 12px; }
+  .hero-ico { font-size:44px; animation: floaty 3s ease-in-out infinite; display:inline-block; }
+
+  .cal { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .day { aspect-ratio:1; border-radius:8px; background:#eef0f7; display:flex; align-items:center; justify-content:center; font-size:12px; color:#555; }
+  .day.on { background:linear-gradient(135deg,#1dd1a1,#48dbfb); color:#fff; font-weight:bold; box-shadow: 0 3px 0 #0a8f74; }
+  .legend { font-size:12px; color:#666; margin-top:8px; }
+
+  .notice { display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed #ddd; }
+  .notice:last-child { border-bottom:none; }
+  .ico { font-size:22px; }
+  .small { color:#777; font-size:12px; margin-top:2px; }
+  .empty { color:#888; font-size:14px; }
+
+  .pay-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #ddd; font-size:14px; }
+  .pay-row:last-child { border-bottom:none; }
+  .amt { font-weight:bold; color:#10ac84; }
+</style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+
+<!-- LOGIN SCREEN -->
+<section id="loginScreen" class="login-wrap">
+  <div style="text-align:center">
+    <svg class="dumbbell" viewBox="0 0 200 120" width="200" height="120">
+      <rect x="10" y="40" width="14" height="40" rx="5" fill="#ff6b6b"/>
+      <rect x="176" y="40" width="14" height="40" rx="5" fill="#ff6b6b"/>
+      <rect x="22" y="30" width="20" height="60" rx="6" fill="#feca57"/>
+      <rect x="158" y="30" width="20" height="60" rx="6" fill="#feca57"/>
+      <rect x="40" y="50" width="120" height="20" rx="8" fill="#48dbfb"/>
+    </svg>
+    <h1>Welcome to My Gym 💪</h1>
+    <p>Check your fee, attendance and notices</p>
+  </div>
+
+  <div class="glass login-card tilt">
+    <h3>Member Login</h3>
+    <input class="field" id="phone" type="tel" inputmode="numeric" placeholder="📱 Phone number (e.g. 03001234567)">
+    <input class="field" id="password" type="password" placeholder="🔒 Password">
+    <button class="btn" id="loginBtn">Login 🚀</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+</section>
+
+<!-- DASHBOARD SCREEN -->
+<section id="dashScreen" class="hidden">
+  <header class="top">
+    <div>
+      <div class="hi">Hi there 👋</div>
+      <div class="name" id="memberName">Member</div>
+    </div>
+    <button class="btn-ghost" id="logoutBtn">Logout</button>
+  </header>
+
+  <div class="wrap">
+    <div class="glass tilt quote" id="quoteBox"></div>
+
+    <div class="grid">
+      <!-- Fee card -->
+      <div class="glass tilt">
+        <h3>💳 Your Fee</h3>
+        <div class="fee-row">
+          <div class="ring" id="ring"><div class="ring-in"><span id="daysNum">0</span><small>days left</small></div></div>
+          <div>
+            <p id="feeEnd"></p>
+            <p id="feeAmt"></p>
+            <span class="pill good" id="feeStatus"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Check-in card -->
+      <div class="glass tilt checkin">
+        <h3>🏋️ Today's Workout</h3>
+        <div class="hero-ico">🔥</div>
+        <p id="todayText">Did you train today?</p>
+        <button class="btn" id="checkinBtn">I'm here today ✅</button>
+        <div class="msg ok" id="checkMsg"></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="tile t1 tilt-tile"><b id="statAttend">0</b><span>Visits this month</span></div>
+      <div class="tile t2 tilt-tile"><b id="statPaid">0</b><span>Total paid (PKR)</span></div>
+      <div class="tile t3 tilt-tile"><b id="statShift">-</b><span>Your shift</span></div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="glass tilt">
+      <h3>🗓️ Last 30 Days</h3>
+      <div class="cal" id="cal"></div>
+      <div class="legend">🟩 Green = you trained that day</div>
+    </div>
+
+    <div class="grid">
+      <!-- Notices -->
+      <div class="glass tilt">
+        <h3>📢 Notices from the Gym</h3>
+        <div id="notices"></div>
+      </div>
+
+      <!-- Payments -->
+      <div class="glass tilt">
+        <h3>🧾 Payment History</h3>
+        <div id="payments"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBRuTpQTgzJoHPSGSkRDW9GLw6r4LjJpjM",
+  authDomain: "gym-system-82a94.firebaseapp.com",
+  projectId: "gym-system-82a94",
+  storageBucket: "gym-system-82a94.firebasestorage.app",
+  messagingSenderId: "754716077658",
+  appId: "1:754716077658:web:de270bcb6ef08d973ab263"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = (id) => document.getElementById(id);
+let member = null;
+let unsubs = [];
+let attendanceDates = new Set();
+let payments = [];
+let notices = [];
+
+// ---------- Motivational quotes ----------
+const quotes = [
+  "Small steps every day build big results. 💪",
+  "Your only limit is you. 🔥",
+  "Sweat today, smile tomorrow. 😄",
+  "Consistency beats intensity. 🏆",
+  "Strong body, strong mind. 🧠",
+  "Pain today is strength tomorrow. ⚡",
+  "Don't stop when you're tired. Stop when you're done. 🎯",
+  "Show up. That's half the battle. 🌟"
+];
+let quoteIndex = 0;
+function showQuote() {
+  const box = $("quoteBox");
+  box.classList.add("fade-out");
+  setTimeout(() => {
+    box.textContent = quotes[quoteIndex % quotes.length];
+    quoteIndex++;
+    box.classList.remove("fade-out");
+  }, 400);
+}
+showQuote();
+setInterval(showQuote, 6000);
+
+// ---------- 3D tilt effect ----------
+document.addEventListener("pointermove", (e) => {
+  document.querySelectorAll(".tilt, .tilt-tile").forEach((el) => {
+    const r = el.getBoundingClientRect();
+    const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    if (!inside) { el.style.transform = ""; return; }
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `perspective(900px) rotateX(${-y * 8}deg) rotateY(${x * 8}deg)`;
+  });
+});
+
+// ---------- Helpers ----------
+function digits(s) { return String(s || "").replace(/\D/g, ""); }
+function todayStr() { return new Date().toLocaleDateString("en-CA"); }
+function esc(text) {
+  return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+function daysLeft(feeStart) {
+  if (!feeStart) return null;
+  const end = new Date(feeStart + "T00:00:00");
+  end.setDate(end.getDate() + 30);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+}
+function showScreen(name) {
+  $("loginScreen").classList.toggle("hidden", name !== "login");
+  $("dashScreen").classList.toggle("hidden", name !== "dash");
+}
+
+// ---------- Login ----------
+$("loginBtn").addEventListener("click", async () => {
+  const phone = digits($("phone").value);
+  const password = $("password").value;
+  $("loginMsg").textContent = "";
+  if (!phone || !password) {
+    $("loginMsg").textContent = "Enter your phone number and password.";
+    return;
+  }
+  $("loginBtn").disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, phone + "@gym.local", password);
+  } catch (err) {
+    $("loginMsg").textContent = "Wrong phone number or password.";
+  } finally {
+    $("loginBtn").disabled = false;
+  }
+});
+
+$("logoutBtn").addEventListener("click", () => signOut(auth));
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    stopAll();
+    member = null;
+    showScreen("login");
+    return;
+  }
+
+  // The login ID is phone@gym.local, so the phone is the part before @
+  const phone = user.email.split("@")[0];
+  const snap = await getDocs(query(collection(db, "members"), where("phone", "==", phone)));
+
+  if (snap.empty) {
+    $("loginMsg").textContent = "This login is not linked to a gym member. Please contact the gym.";
+    await signOut(auth);
+    return;
+  }
+
+  member = { id: snap.docs[0].id, ...snap.docs[0].data() };
+  showScreen("dash");
+  startListening();
+});
+
+// ---------- Live data ----------
+function startListening() {
+  stopAll();
+
+  unsubs.push(onSnapshot(doc(db, "members", member.id), (s) => {
+    if (s.exists()) { member = { id: s.id, ...s.data() }; renderAll(); }
+  }));
+
+  unsubs.push(onSnapshot(query(collection(db, "attendance"), where("memberId", "==", member.id)), (s) => {
+    attendanceDates = new Set(s.docs.map((d) => d.data().date));
+    renderAll();
+  }));
+
+  unsubs.push(onSnapshot(query(collection(db, "payments"), where("memberId", "==", member.id)), (s) => {
+    payments = s.docs.map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    renderAll();
+  }));
+
+  unsubs.push(onSnapshot(query(collection(db, "notices"), orderBy("createdAt", "desc")), (s) => {
+    notices = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderAll();
+  }));
+}
+
+function stopAll() {
+  unsubs.forEach((u) => u());
+  unsubs = [];
+}
+
+// ---------- Render ----------
+function renderAll() {
+  if (!member) return;
+  const today = todayStr();
+
+  $("memberName").textContent = member.name || "Member";
+
+  // Fee ring and status
+  const days = daysLeft(member.feeStart);
+  const pct = days === null ? 0 : Math.max(0, Math.min(100, (days / 30) * 100));
+  $("ring").style.setProperty("--p", pct + "%");
+  $("daysNum").textContent = days === null ? "-" : Math.max(days, 0);
+  $("feeEnd").textContent = member.feeStart ? "Renews on " + addDays(member.feeStart, 30) : "No fee date set";
+  $("feeAmt").textContent = "Amount: PKR " + (member.feeAmount || "-");
+
+  const pill = $("feeStatus");
+  if (days === null) { pill.textContent = "No fee"; pill.className = "pill"; }
+  else if (days < 0) { pill.textContent = "Expired " + Math.abs(days) + " days ago 😟"; pill.className = "pill bad"; }
+  else if (days <= 5) { pill.textContent = "Renew soon ⏰"; pill.className = "pill warn"; }
+  else { pill.textContent = "Active ✅"; pill.className = "pill good"; }
+
+  // Check-in button
+  const doneToday = attendanceDates.has(today);
+  $("checkinBtn").disabled = doneToday;
+  $("checkinBtn").textContent = doneToday ? "Checked in today 🎉" : "I'm here today ✅";
+  $("todayText").textContent = doneToday
+    ? "Great job! Your attendance is recorded."
+    : "Did you train today? Tap below to check in.";
+
+  // Stats
+  const monthPrefix = today.slice(0, 7);
+  const visitsThisMonth = [...attendanceDates].filter((d) => d.startsWith(monthPrefix)).length;
+  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  $("statAttend").textContent = visitsThisMonth;
+  $("statPaid").textContent = totalPaid.toLocaleString();
+  $("statShift").textContent = member.shift || "-";
+
+  renderCalendar();
+  renderNotices();
+  renderPayments();
+}
+
+function renderCalendar() {
+  const cells = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const s = d.toLocaleDateString("en-CA");
+    const on = attendanceDates.has(s);
+    cells.push(`<div class="day ${on ? "on" : ""}" title="${s}">${d.getDate()}</div>`);
+  }
+  $("cal").innerHTML = cells.join("");
+}
+
+function renderNotices() {
+  if (notices.length === 0) {
+    $("notices").innerHTML = `<p class="empty">No notices yet. 🙂</p>`;
+    return;
+  }
+  $("notices").innerHTML = notices.slice(0, 20).map((n) => `
+    <div class="notice">
+      <span class="ico">📢</span>
+      <div>
+        <div>${esc(n.text)}</div>
+        <div class="small">${esc(n.date)}</div>
+      </div>
+    </div>`).join("");
+}
+
+function renderPayments() {
+  if (payments.length === 0) {
+    $("payments").innerHTML = `<p class="empty">No payments recorded yet.</p>`;
+    return;
+  }
+  $("payments").innerHTML = payments.slice(0, 20).map((p) => `
+    <div class="pay-row">
+      <span>${esc(p.date)} · ${esc(p.method)}</span>
+      <span class="amt">PKR ${esc(p.amount)}</span>
+    </div>`).join("");
+}
+
+// ---------- Check in ----------
+$("checkinBtn").addEventListener("click", async () => {
+  const today = todayStr();
+  $("checkinBtn").disabled = true;
+  try {
+    // Same document ID the admin panel uses, so the gym sees the same record
+    await setDoc(doc(db, "attendance", `${today}_${member.id}`), {
+      memberId: member.id,
+      name: member.name,
+      date: today,
+      time: new Date().toLocaleTimeString()
+    });
+    $("checkMsg").textContent = "Checked in! Have a great workout 💪";
+  } catch (err) {
+    $("checkMsg").style.color = "#c62828";
+    $("checkMsg").textContent = "Could not check in: " + err.message;
+    $("checkinBtn").disabled = false;
+  }
+});
+</script>
+</body>
+</html>
