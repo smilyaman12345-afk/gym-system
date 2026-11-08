@@ -506,7 +506,8 @@ const firebaseConfig = {
   appId: "1:754716077658:web:de270bcb6ef08d973ab263"
 };
 
-const app = initializeApp(firebaseConfig);
+// Named app so the admin login is stored separately from the member page
+const app = initializeApp(firebaseConfig, "adminApp");
 const auth = getAuth(app);
 const db = getFirestore(app);
 
@@ -724,7 +725,6 @@ function applyRole() {
     b.classList.toggle("hidden", !visible);
   });
 
-  // Trainers land on the members list
   showSection(role === "trainer" ? "secMembers" : "secDash");
 }
 
