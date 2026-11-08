@@ -4,19 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gym Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
   :root { --red:#e53935; --dark:#1e1e2d; --bg:#f4f6fb; --card:#fff; --green:#2e7d32; --amber:#f9a825; --muted:#6b7280; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: Arial, sans-serif; background: var(--bg); color:#222; min-height:100vh; }
+  .hidden { display:none !important; }
   .login-wrap { min-height:100vh; display:flex; justify-content:center; align-items:center; background: linear-gradient(135deg,#1e1e2d,#e53935); padding:16px; }
   .card { background:var(--card); padding:24px; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,0.12); }
   .login-card { width:100%; max-width:360px; }
   h1 { margin:0 0 4px; font-size:24px; }
   h2 { margin:0 0 12px; font-size:18px; }
+  h3 { margin:16px 0 8px; font-size:15px; color:#5f27cd; }
   .sub { color:var(--muted); margin:0 0 16px; font-size:14px; }
   .label { display:block; color:var(--muted); font-size:13px; margin-top:8px; }
   input, select, textarea { width:100%; padding:12px; margin:6px 0; border:1px solid #d1d5db; border-radius:8px; font-size:16px; background:#fff; font-family:inherit; }
-  textarea { min-height:90px; resize:vertical; }
+  textarea { min-height:70px; resize:vertical; }
   button { padding:12px 16px; border:none; border-radius:8px; font-size:15px; cursor:pointer; color:#fff; background:var(--red); }
   button:hover { opacity:0.92; }
   button:disabled { background:#9ca3af; cursor:default; }
@@ -27,12 +30,17 @@
   .btn-edit { padding:6px 10px; font-size:13px; background:#1e88e5; }
   .btn-pay { padding:6px 10px; font-size:13px; background:#8e24aa; }
   .btn-present { padding:6px 10px; font-size:13px; background:var(--green); }
+  .btn-view { padding:6px 10px; font-size:13px; background:#6b7280; }
+  .btn-wa { padding:6px 10px; font-size:13px; background:#25d366; }
+  .btn-export { background:#374151; margin:8px 0; width:100%; }
+  .btn-wa-link { display:block; text-align:center; background:#25d366; color:#fff; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold; }
+  .wa-mini { color:#128c7e; font-size:12px; font-weight:bold; margin-left:6px; text-decoration:none; }
   .msg { min-height:20px; margin-top:10px; font-size:14px; color:#c62828; }
-  .hidden { display:none !important; }
   header { background:var(--dark); color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
   header h1 { color:#fff; font-size:20px; }
   header span { font-size:13px; opacity:0.8; }
-  .container { max-width:1100px; margin:0 auto; padding:16px; }
+  .role-badge { background:var(--amber); color:#222 !important; opacity:1 !important; padding:3px 10px; border-radius:12px; font-size:12px; margin-left:8px; text-transform:capitalize; font-weight:bold; }
+  .container { max-width:1150px; margin:0 auto; padding:16px; }
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:16px; }
   .stat { background:var(--card); border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:5px solid var(--red); }
   .stat.green { border-color:var(--green); }
@@ -43,8 +51,8 @@
   .stat .lbl { color:var(--muted); font-size:13px; }
   .notice-banner { background:#fff8e1; border-left:5px solid var(--amber); border-radius:10px; padding:14px 16px; margin-bottom:16px; }
   .notice-banner strong { display:block; margin-bottom:4px; }
-  .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
-  @media (min-width:800px) { .grid { grid-template-columns: 360px 1fr; align-items:start; } }
+  .grid { display:grid; grid-template-columns:1fr; gap:16px; }
+  @media (min-width:900px) { .grid { grid-template-columns: 360px 1fr; align-items:start; } }
   .table-wrap { overflow-x:auto; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
   th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #eee; vertical-align:top; }
@@ -57,8 +65,27 @@
   .b-soon { background:var(--amber); color:#222; }
   .b-exp { background:#c62828; }
   .section-gap { margin-top:16px; }
+  .filters { display:flex; flex-wrap:wrap; gap:8px; }
+  .filters input, .filters select { margin:4px 0; width:auto; flex:1; min-width:140px; }
   .notice-item { border-bottom:1px solid #eee; padding:12px 0; }
   .notice-item:last-child { border-bottom:none; }
+  .row-line { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 0; border-bottom:1px solid #eee; font-size:14px; }
+  .row-line:last-child { border-bottom:none; }
+  .report-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
+  .rbox { background:#f3f4f6; border-radius:10px; padding:12px 6px; text-align:center; }
+  .rbox b { display:block; font-size:20px; }
+  .rbox span { font-size:12px; color:var(--muted); }
+  .pay-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #ddd; font-size:14px; }
+  .pay-row:last-child { border-bottom:none; }
+  .amt { font-weight:bold; color:#10ac84; }
+  .chips span { display:inline-block; background:#eef0f7; padding:4px 8px; border-radius:12px; margin:2px; font-size:12px; }
+  .kv div { margin:6px 0; font-size:14px; }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50; }
+  .modal-box { background:#fff; border-radius:14px; padding:20px; max-width:560px; width:100%; max-height:90vh; overflow:auto; }
+  .qr-box { display:flex; justify-content:center; background:#fff; border:1px solid #eee; border-radius:12px; padding:14px; margin:10px 0; min-height:120px; align-items:center; }
+  .qr-full { position:fixed; inset:0; background:#fff; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; }
+  .qr-full p { font-size:22px; font-weight:bold; color:#222; margin:0; }
+  .qr-full button { background:#374151; }
 </style>
 </head>
 <body>
@@ -81,6 +108,7 @@
     <div>
       <h1>Gym Admin</h1>
       <span id="userEmail"></span>
+      <span class="role-badge" id="roleBadge"></span>
     </div>
     <button class="btn-dark" id="logoutBtn">Logout</button>
   </header>
@@ -97,19 +125,30 @@
       <div class="stat green"><div class="num" id="activeCount">0</div><div class="lbl">Active fees</div></div>
       <div class="stat amber"><div class="num" id="soonCount">0</div><div class="lbl">Expiring in 5 days</div></div>
       <div class="stat"><div class="num" id="expiredCount">0</div><div class="lbl">Expired fees</div></div>
-      <div class="stat purple"><div class="num" id="collectedCount">0</div><div class="lbl">Collected this month (PKR)</div></div>
+      <div class="stat purple" id="collectedStat"><div class="num" id="collectedCount">0</div><div class="lbl">Collected this month (PKR)</div></div>
     </div>
 
     <div class="grid">
+      <!-- LEFT COLUMN -->
       <div>
-        <!-- MEMBER FORM -->
-        <div class="card">
+        <!-- GATE QR -->
+        <div class="card" id="gateCard">
+          <h2>Gate QR code</h2>
+          <p class="small">Show this at the entrance. Members scan it with the My Gym app to mark attendance. You don't need to change it daily.</p>
+          <div class="qr-box"><canvas id="qrCanvas"></canvas><span class="small" id="qrPlaceholder">No QR created yet.</span></div>
+          <div class="small" id="gateInfo"></div>
+          <button class="btn-full" id="genQrBtn">Generate new QR</button>
+          <button class="btn-full btn-dark" id="fullQrBtn">Show full screen</button>
+          <div class="msg" id="gateMsg"></div>
+        </div>
+
+        <div class="card section-gap" id="memberFormCard">
           <h2 id="formTitle">Add member</h2>
           <input id="fName" placeholder="Full name *">
-          <input id="fPhone" placeholder="Phone number *">
+          <input id="fPhone" type="tel" placeholder="Phone number * (e.g. 03001234567)">
           <input id="fEmail" type="email" placeholder="Email (optional)">
           <input id="fAddress" placeholder="Home address">
-          <label class="label" for="fDob">Date of birth</label>
+          <label class="label" for="fDob">Date of birth (needed for member sign-up)</label>
           <input id="fDob" type="date">
           <input id="fEmName" placeholder="Emergency contact name">
           <input id="fEmPhone" placeholder="Emergency contact phone">
@@ -122,13 +161,12 @@
             <option value="Morning">Morning shift</option>
             <option value="Evening">Evening shift</option>
           </select>
-          <textarea id="fNotes" placeholder="Notes (optional)" style="min-height:70px"></textarea>
+          <textarea id="fNotes" placeholder="Notes (optional)"></textarea>
           <button class="btn-full" id="saveBtn">Add member</button>
           <button class="btn-full btn-dark hidden" id="cancelBtn">Cancel editing</button>
           <div class="msg" id="formMsg"></div>
         </div>
 
-        <!-- RECORD PAYMENT -->
         <div class="card section-gap" id="payCard">
           <h2>Record payment</h2>
           <label class="label" for="payMember">Member</label>
@@ -148,8 +186,7 @@
           <div class="msg" id="payMsg"></div>
         </div>
 
-        <!-- NOTICES -->
-        <div class="card section-gap">
+        <div class="card section-gap" id="noticeCard">
           <h2>Post notice to members</h2>
           <div>
             <button class="btn-quick" data-quick="Gym is closed today. Sorry for the inconvenience.">Gym closed today</button>
@@ -160,37 +197,81 @@
           <button class="btn-full" id="noticeBtn">Post notice</button>
           <div class="msg" id="noticeMsg"></div>
         </div>
+
+        <div class="card section-gap" id="staffCard">
+          <h2>Staff accounts</h2>
+          <p class="small">Only you can add or remove staff. Receptionists manage members, payments and notices. Trainers can only mark attendance.</p>
+          <input id="stName" placeholder="Staff name">
+          <input id="stEmail" type="email" placeholder="Staff email">
+          <input id="stPass" type="password" placeholder="Temporary password (min 6 characters)">
+          <select id="stRole">
+            <option value="receptionist">Receptionist</option>
+            <option value="trainer">Trainer</option>
+          </select>
+          <button class="btn-full" id="staffBtn">Create staff login</button>
+          <div class="msg" id="staffMsg"></div>
+          <h3>Current staff</h3>
+          <div id="staffList"></div>
+        </div>
       </div>
 
+      <!-- RIGHT COLUMN -->
       <div>
-        <!-- MEMBER LIST -->
         <div class="card">
           <h2>Members</h2>
-          <input id="search" placeholder="Search by name, phone, or address">
+          <div class="filters">
+            <input id="search" placeholder="Search name, phone or address">
+            <select id="statusFilter">
+              <option value="all">All fee status</option>
+              <option value="active">Active</option>
+              <option value="expiring">Expiring soon</option>
+              <option value="expired">Expired</option>
+              <option value="unpaid">Not paid this month</option>
+            </select>
+            <select id="shiftFilter">
+              <option value="all">All shifts</option>
+              <option value="Morning">Morning</option>
+              <option value="Evening">Evening</option>
+            </select>
+          </div>
+          <button class="btn-export" id="exportMembersBtn">⬇ Download this list (CSV)</button>
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>Member</th><th>Shift</th><th>Fee</th><th>Fee status</th><th>Today</th><th>Actions</th></tr>
+                <tr><th>Member</th><th>Shift</th><th>Fee</th><th>Fee status</th><th>Today</th><th>Login</th><th>Actions</th></tr>
               </thead>
               <tbody id="memberRows"></tbody>
             </table>
           </div>
         </div>
 
-        <!-- PAYMENT HISTORY -->
-        <div class="card section-gap">
+        <div class="card section-gap" id="reportCard">
+          <h2>Monthly report</h2>
+          <label class="label" for="reportMonth">Choose month</label>
+          <input id="reportMonth" type="month">
+          <div class="report-grid">
+            <div class="rbox"><b id="rNew">0</b><span>New members</span></div>
+            <div class="rbox"><b id="rCollected">0</b><span>Collected (PKR)</span></div>
+            <div class="rbox"><b id="rUnpaid">0</b><span>Not paid</span></div>
+          </div>
+          <h3>New members</h3>
+          <div id="rNewList"></div>
+          <h3>Not paid this month</h3>
+          <div id="rUnpaidList"></div>
+          <button class="btn-export" id="exportReportBtn">⬇ Download report (CSV)</button>
+          <p class="small">"Not paid" means no payment was recorded in the chosen month for a member who had joined by then.</p>
+        </div>
+
+        <div class="card section-gap" id="paymentsCard">
           <h2>Payment history</h2>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Date</th><th>Member</th><th>Amount</th><th>Method</th></tr>
-              </thead>
+              <thead><tr><th>Date</th><th>Member</th><th>Amount</th><th>Method</th></tr></thead>
               <tbody id="paymentRows"></tbody>
             </table>
           </div>
         </div>
 
-        <!-- NOTICE HISTORY -->
         <div class="card section-gap">
           <h2>Notices sent</h2>
           <div id="noticeList"></div>
@@ -200,10 +281,25 @@
   </div>
 </div>
 
+<!-- MEMBER PROFILE POPUP -->
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <div id="modalBody"></div>
+    <button class="btn-dark btn-full" id="modalClose">Close</button>
+  </div>
+</div>
+
+<!-- FULL SCREEN QR -->
+<div id="qrFull" class="qr-full hidden">
+  <p>Scan to check in</p>
+  <canvas id="qrFullCanvas"></canvas>
+  <button id="qrFullClose">Close</button>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, setDoc, doc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, setDoc, doc, getDoc, getDocs, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBRuTpQTgzJoHPSGSkRDW9GLw6r4LjJpjM",
@@ -218,47 +314,35 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Second app used only to create staff logins, so the owner stays signed in
+const secondaryApp = initializeApp(firebaseConfig, "secondary");
+const secondaryAuth = getAuth(secondaryApp);
+
 const $ = (id) => document.getElementById(id);
+let role = null;
 let allMembers = [];
 let allPayments = [];
 let allNotices = [];
+let allStaff = [];
 let presentIds = new Set();
-let unsubMembers = null, unsubAttendance = null, unsubPayments = null, unsubNotices = null;
+let unsubs = [];
 let editingId = null;
-
-// ---------- Login ----------
-$("loginBtn").addEventListener("click", async () => {
-  $("loginMsg").textContent = "";
-  try {
-    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
-  } catch (err) {
-    $("loginMsg").textContent = "Login failed. Check your email and password.";
-  }
-});
-
-$("logoutBtn").addEventListener("click", () => signOut(auth));
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    $("loginBox").classList.add("hidden");
-    $("adminBox").classList.remove("hidden");
-    $("userEmail").textContent = "Logged in as " + user.email;
-    $("payDate").value = todayStr();
-    startListening();
-  } else {
-    $("loginBox").classList.remove("hidden");
-    $("adminBox").classList.add("hidden");
-    stopListening();
-  }
-});
+let lastMembersShown = [];
+let lastReport = null;
+let currentGateText = null;
 
 // ---------- Helpers ----------
-function escapeHtml(text) {
+function esc(text) {
   return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
+function digits(s) { return String(s || "").replace(/\D/g, ""); }
+function todayStr() { return new Date().toLocaleDateString("en-CA"); }
+function thisMonth() { return todayStr().slice(0, 7); }
 
-function todayStr() {
-  return new Date().toLocaleDateString("en-CA");
+function setMsg(id, text, ok = false) {
+  const el = $(id);
+  el.style.color = ok ? "#2e7d32" : "#c62828";
+  el.textContent = text;
 }
 
 function daysLeft(feeStart) {
@@ -270,65 +354,253 @@ function daysLeft(feeStart) {
   return Math.ceil((end - today) / (1000 * 60 * 60 * 24));
 }
 
-function feeBadge(days) {
-  if (days === null) return "-";
-  if (days < 0) return `<span class="badge b-exp">Expired ${Math.abs(days)} days ago</span>`;
-  if (days <= 5) return `<span class="badge b-soon">${days} days left</span>`;
-  return `<span class="badge b-ok">${days} days left</span>`;
+function feeStatusOf(m) {
+  const d = daysLeft(m.feeStart);
+  if (d === null) return "none";
+  if (d < 0) return "expired";
+  if (d <= 5) return "expiring";
+  return "active";
+}
+
+function feeBadge(m) {
+  const d = daysLeft(m.feeStart);
+  if (d === null) return "-";
+  if (d < 0) return `<span class="badge b-exp">Expired ${Math.abs(d)} days ago</span>`;
+  if (d <= 5) return `<span class="badge b-soon">${d} days left</span>`;
+  return `<span class="badge b-ok">${d} days left</span>`;
+}
+
+function joinedMonth(m) { return (m.joinDate || m.feeStart || "").slice(0, 7); }
+
+function paidIdsFor(month) {
+  return new Set(allPayments.filter((p) => (p.date || "").startsWith(month)).map((p) => p.memberId));
+}
+
+function isUnpaid(m, month, paidIds) {
+  const j = joinedMonth(m);
+  return !!j && j <= month && !paidIds.has(m.id);
+}
+
+function waLink(phone, text) {
+  let p = digits(phone);
+  if (p.startsWith("0")) p = "92" + p.slice(1);
+  return `https://wa.me/${p}?text=${encodeURIComponent(text)}`;
+}
+
+function reminderText(m) {
+  const d = daysLeft(m.feeStart);
+  let when = "is due soon";
+  if (d !== null && d < 0) when = `expired ${Math.abs(d)} day(s) ago`;
+  else if (d !== null) when = `will end in ${d} day(s)`;
+  return `Assalam o Alaikum ${m.name}! Your gym fee ${when}. Please renew it to keep training without a break. Thank you - My Gym`;
+}
+
+function downloadCsv(filename, rows) {
+  const csv = "\uFEFF" + rows
+    .map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function friendlyError(err) {
+  const code = err.code || "";
+  if (code === "auth/email-already-in-use") return "This email already has a login.";
+  if (code === "auth/weak-password") return "Password must be at least 6 characters.";
+  if (code === "auth/invalid-email") return "Email is not valid.";
+  if (code === "auth/operation-not-allowed") return "Email/Password login is not turned on in Firebase.";
+  if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") return "Wrong email or password.";
+  if (code === "permission-denied") return "Your role is not allowed to do this.";
+  return err.message || String(err);
+}
+
+// Random one-time-style code for the gate QR
+function newToken() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ---------- Login ----------
+$("loginBtn").addEventListener("click", async () => {
+  setMsg("loginMsg", "");
+  $("loginBtn").disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+  } catch (err) {
+    setMsg("loginMsg", "Wrong email or password.");
+  } finally {
+    $("loginBtn").disabled = false;
+  }
+});
+
+$("logoutBtn").addEventListener("click", () => signOut(auth));
+
+// ---------- Auth state: only accounts listed in "admins" get in ----------
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    stopListening();
+    role = null;
+    $("adminBox").classList.add("hidden");
+    $("loginBox").classList.remove("hidden");
+    return;
+  }
+
+  const snap = await getDoc(doc(db, "admins", user.uid));
+  if (!snap.exists()) {
+    setMsg("loginMsg", "This login is not an admin account. Please use the member page.");
+    await signOut(auth);
+    return;
+  }
+
+  role = snap.data().role || "receptionist";
+  $("userEmail").textContent = "Logged in as " + (user.email || "");
+  $("loginBox").classList.add("hidden");
+  $("adminBox").classList.remove("hidden");
+  $("reportMonth").value = thisMonth();
+  applyRole();
+  startListening();
+});
+
+// Show or hide sections based on the signed-in role
+function applyRole() {
+  const owner = role === "owner";
+  const front = owner || role === "receptionist";
+  $("roleBadge").textContent = role;
+  $("gateCard").classList.toggle("hidden", !front);
+  $("memberFormCard").classList.toggle("hidden", !front);
+  $("payCard").classList.toggle("hidden", !front);
+  $("noticeCard").classList.toggle("hidden", !front);
+  $("reportCard").classList.toggle("hidden", !front);
+  $("paymentsCard").classList.toggle("hidden", !front);
+  $("collectedStat").classList.toggle("hidden", !front);
+  $("exportMembersBtn").classList.toggle("hidden", !front);
+  $("staffCard").classList.toggle("hidden", !owner);
 }
 
 // ---------- Live data from Firestore ----------
 function startListening() {
   stopListening();
 
-  unsubMembers = onSnapshot(query(collection(db, "members"), orderBy("name")), (snapshot) => {
-    allMembers = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderStats();
-    renderTable();
-    renderMemberDropdown();
+  unsubs.push(onSnapshot(query(collection(db, "members"), orderBy("name")), (s) => {
+    allMembers = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderAll();
   }, (err) => {
-    $("memberRows").innerHTML = `<tr><td colspan="6">Could not load members: ${escapeHtml(err.message)}</td></tr>`;
-  });
+    $("memberRows").innerHTML = `<tr><td colspan="7">Could not load members: ${esc(err.message)}</td></tr>`;
+  }));
 
-  unsubAttendance = onSnapshot(query(collection(db, "attendance"), where("date", "==", todayStr())), (snapshot) => {
-    presentIds = new Set(snapshot.docs.map((d) => d.data().memberId));
+  unsubs.push(onSnapshot(query(collection(db, "attendance"), where("date", "==", todayStr())), (s) => {
+    presentIds = new Set(s.docs.map((d) => d.data().memberId));
     renderStats();
     renderTable();
-  });
+  }));
 
-  unsubPayments = onSnapshot(query(collection(db, "payments"), orderBy("date", "desc")), (snapshot) => {
-    allPayments = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderStats();
-    renderPayments();
-  });
+  unsubs.push(onSnapshot(query(collection(db, "payments"), orderBy("date", "desc")), (s) => {
+    allPayments = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderAll();
+  }));
 
-  unsubNotices = onSnapshot(query(collection(db, "notices"), orderBy("createdAt", "desc")), (snapshot) => {
-    allNotices = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+  unsubs.push(onSnapshot(query(collection(db, "notices"), orderBy("createdAt", "desc")), (s) => {
+    allNotices = s.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderNotices();
-  });
+  }));
+
+  unsubs.push(onSnapshot(doc(db, "gate", "current"), (s) => {
+    renderGate(s.exists() ? s.data() : null);
+  }));
+
+  if (role === "owner") {
+    unsubs.push(onSnapshot(collection(db, "admins"), (s) => {
+      allStaff = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderStaff();
+    }));
+  }
 }
 
 function stopListening() {
-  if (unsubMembers) unsubMembers();
-  if (unsubAttendance) unsubAttendance();
-  if (unsubPayments) unsubPayments();
-  if (unsubNotices) unsubNotices();
-  unsubMembers = unsubAttendance = unsubPayments = unsubNotices = null;
+  unsubs.forEach((u) => u());
+  unsubs = [];
+}
+
+// ---------- Gate QR ----------
+function renderGate(data) {
+  if (!data || !data.token) {
+    currentGateText = null;
+    $("qrPlaceholder").classList.remove("hidden");
+    $("gateInfo").textContent = "";
+    return;
+  }
+
+  currentGateText = "GYM-CHECKIN:" + data.token;
+  $("qrPlaceholder").classList.add("hidden");
+
+  if (typeof QRCode === "undefined") {
+    setMsg("gateMsg", "QR library did not load. Refresh the page.");
+    return;
+  }
+  QRCode.toCanvas($("qrCanvas"), currentGateText, { width: 220, margin: 1 }).catch(() => {});
+
+  const created = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString() : "just now";
+  $("gateInfo").textContent = "Created: " + created;
+}
+
+$("genQrBtn").addEventListener("click", async () => {
+  if (currentGateText && !confirm("Create a new QR? The current QR will stop working.")) return;
+  $("genQrBtn").disabled = true;
+  setMsg("gateMsg", "");
+  try {
+    await setDoc(doc(db, "gate", "current"), {
+      token: newToken(),
+      createdAt: new Date(),
+      createdBy: auth.currentUser ? auth.currentUser.email : ""
+    });
+    setMsg("gateMsg", "New QR created. Show it at the entrance.", true);
+  } catch (err) {
+    setMsg("gateMsg", friendlyError(err));
+  } finally {
+    $("genQrBtn").disabled = false;
+  }
+});
+
+$("fullQrBtn").addEventListener("click", () => {
+  if (!currentGateText || typeof QRCode === "undefined") {
+    setMsg("gateMsg", "Create a QR first.");
+    return;
+  }
+  QRCode.toCanvas($("qrFullCanvas"), currentGateText, { width: 320, margin: 2 }).catch(() => {});
+  $("qrFull").classList.remove("hidden");
+});
+
+$("qrFullClose").addEventListener("click", () => $("qrFull").classList.add("hidden"));
+
+// ---------- Rendering ----------
+function renderAll() {
+  renderStats();
+  renderTable();
+  renderReport();
+  renderMemberDropdown();
+  renderPayments();
 }
 
 function renderStats() {
   let active = 0, soon = 0, expired = 0;
   allMembers.forEach((m) => {
-    const d = daysLeft(m.feeStart);
-    if (d === null) return;
-    if (d < 0) expired++;
-    else if (d <= 5) soon++;
-    else active++;
+    const s = feeStatusOf(m);
+    if (s === "active") active++;
+    else if (s === "expiring") soon++;
+    else if (s === "expired") expired++;
   });
 
-  const monthPrefix = todayStr().slice(0, 7);
+  const month = thisMonth();
   const collected = allPayments
-    .filter((p) => (p.date || "").startsWith(monthPrefix))
+    .filter((p) => (p.date || "").startsWith(month))
     .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
   $("totalCount").textContent = allMembers.length;
@@ -340,44 +612,104 @@ function renderStats() {
 }
 
 function renderTable() {
+  const owner = role === "owner";
+  const front = owner || role === "receptionist";
   const term = $("search").value.trim().toLowerCase();
-  const list = allMembers.filter((m) =>
-    !term ||
-    (m.name || "").toLowerCase().includes(term) ||
-    (m.phone || "").includes(term) ||
-    (m.address || "").toLowerCase().includes(term)
-  );
+  const statusF = $("statusFilter").value;
+  const shiftF = $("shiftFilter").value;
+  const month = thisMonth();
+  const paidIds = paidIdsFor(month);
+
+  const list = allMembers.filter((m) => {
+    const hit = !term ||
+      (m.name || "").toLowerCase().includes(term) ||
+      (m.phone || "").includes(term) ||
+      (m.address || "").toLowerCase().includes(term);
+    const statusOk = statusF === "all" ||
+      (statusF === "unpaid" ? isUnpaid(m, month, paidIds) : feeStatusOf(m) === statusF);
+    const shiftOk = shiftF === "all" || m.shift === shiftF;
+    return hit && statusOk && shiftOk;
+  });
+
+  lastMembersShown = list;
 
   if (list.length === 0) {
-    $("memberRows").innerHTML = `<tr><td colspan="6">No members found.</td></tr>`;
+    $("memberRows").innerHTML = `<tr><td colspan="7">No members match these filters.</td></tr>`;
     return;
   }
 
   $("memberRows").innerHTML = list.map((m) => {
-    const isPresent = presentIds.has(m.id);
-    const presentBtn = isPresent
+    const id = esc(m.id);
+    const s = feeStatusOf(m);
+    const presentBtn = presentIds.has(m.id)
       ? `<button class="btn-present" disabled>Present</button>`
-      : `<button class="btn-present" data-action="present" data-id="${escapeHtml(m.id)}">Mark present</button>`;
+      : `<button class="btn-present" data-action="present" data-id="${id}">Mark present</button>`;
+    const loginBadge = m.hasLogin
+      ? `<span class="badge b-ok">Yes</span>`
+      : `<span class="badge b-soon">Not yet</span>`;
+
+    let actions = `<button class="btn-view" data-action="view" data-id="${id}">View</button>`;
+    if (front) {
+      if (s === "expiring" || s === "expired") {
+        actions += `<button class="btn-wa" data-action="remind" data-id="${id}">Remind</button>`;
+      }
+      actions += `<button class="btn-pay" data-action="pay" data-id="${id}">Pay</button>`;
+      actions += `<button class="btn-edit" data-action="edit" data-id="${id}">Edit</button>`;
+    }
+    if (owner) {
+      actions += `<button class="btn-small" data-action="delete" data-id="${id}">Delete</button>`;
+    }
 
     return `
     <tr>
       <td>
-        <strong>${escapeHtml(m.name)}</strong>
-        <div class="small">${escapeHtml(m.phone)}${m.email ? " · " + escapeHtml(m.email) : ""}</div>
-        ${m.address ? `<div class="small">${escapeHtml(m.address)}</div>` : ""}
-        ${m.emName ? `<div class="small">Emergency: ${escapeHtml(m.emName)} ${escapeHtml(m.emPhone)}</div>` : ""}
+        <strong>${esc(m.name)}</strong>
+        <div class="small">${esc(m.phone)}${m.email ? " · " + esc(m.email) : ""}</div>
+        ${m.address ? `<div class="small">${esc(m.address)}</div>` : ""}
       </td>
-      <td>${escapeHtml(m.shift)}</td>
-      <td>${escapeHtml(m.feeAmount)}</td>
-      <td>${feeBadge(daysLeft(m.feeStart))}</td>
+      <td>${esc(m.shift)}</td>
+      <td>${esc(m.feeAmount)}</td>
+      <td>${feeBadge(m)}</td>
       <td>${presentBtn}</td>
-      <td class="actions">
-        <button class="btn-pay" data-action="pay" data-id="${escapeHtml(m.id)}">Pay</button>
-        <button class="btn-edit" data-action="edit" data-id="${escapeHtml(m.id)}">Edit</button>
-        <button class="btn-small" data-action="delete" data-id="${escapeHtml(m.id)}">Delete</button>
-      </td>
+      <td>${loginBadge}</td>
+      <td class="actions">${actions}</td>
     </tr>`;
   }).join("");
+}
+
+function renderReport() {
+  const month = $("reportMonth").value || thisMonth();
+  const paidIds = paidIdsFor(month);
+  const newMembers = allMembers.filter((m) => joinedMonth(m) === month);
+  const unpaid = allMembers.filter((m) => isUnpaid(m, month, paidIds));
+  const collected = allPayments
+    .filter((p) => (p.date || "").startsWith(month))
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+  $("rNew").textContent = newMembers.length;
+  $("rCollected").textContent = collected.toLocaleString();
+  $("rUnpaid").textContent = unpaid.length;
+
+  $("rNewList").innerHTML = newMembers.length
+    ? newMembers.map((m) => `<div class="row-line"><span>${esc(m.name)} · ${esc(m.phone)}</span></div>`).join("")
+    : `<p class="small">No new members this month.</p>`;
+
+  $("rUnpaidList").innerHTML = unpaid.length
+    ? unpaid.map((m) => `
+        <div class="row-line">
+          <span>${esc(m.name)} · ${esc(m.phone)}</span>
+          <a class="wa-mini" href="${waLink(m.phone, reminderText(m))}" target="_blank">WhatsApp</a>
+        </div>`).join("")
+    : `<p class="small">Everyone has paid for this month. 🎉</p>`;
+
+  lastReport = { month, newMembers, unpaid, collected };
+}
+
+function renderMemberDropdown() {
+  const current = $("payMember").value;
+  $("payMember").innerHTML = `<option value="">Select a member</option>` +
+    allMembers.map((m) => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("");
+  if (current) $("payMember").value = current;
 }
 
 function renderPayments() {
@@ -387,120 +719,157 @@ function renderPayments() {
   }
   $("paymentRows").innerHTML = allPayments.slice(0, 50).map((p) => `
     <tr>
-      <td>${escapeHtml(p.date)}</td>
-      <td>${escapeHtml(p.name)}</td>
-      <td>${escapeHtml(p.amount)}</td>
-      <td>${escapeHtml(p.method)}</td>
+      <td>${esc(p.date)}</td>
+      <td>${esc(p.name)}</td>
+      <td>${esc(p.amount)}</td>
+      <td>${esc(p.method)}</td>
     </tr>`).join("");
 }
 
-function renderMemberDropdown() {
-  const current = $("payMember").value;
-  $("payMember").innerHTML = `<option value="">Select a member</option>` +
-    allMembers.map((m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)}</option>`).join("");
-  if (current) $("payMember").value = current;
-}
-
 function renderNotices() {
+  const front = role === "owner" || role === "receptionist";
   if (allNotices.length === 0) {
     $("latestNoticeBox").classList.add("hidden");
     $("noticeList").innerHTML = `<p class="small">No notices yet.</p>`;
     return;
   }
-
-  const latest = allNotices[0];
-  $("latestNotice").textContent = " " + latest.text;
+  $("latestNotice").textContent = " " + allNotices[0].text;
   $("latestNoticeBox").classList.remove("hidden");
-
   $("noticeList").innerHTML = allNotices.slice(0, 30).map((n) => `
     <div class="notice-item">
-      <div>${escapeHtml(n.text)}</div>
-      <div class="small">${escapeHtml(n.date)}</div>
-      <button class="btn-small" style="margin-top:6px" data-action="delete-notice" data-id="${escapeHtml(n.id)}">Delete notice</button>
+      <div>${esc(n.text)}</div>
+      <div class="small">${esc(n.date)}</div>
+      ${front ? `<button class="btn-small" style="margin-top:6px" data-action="delete-notice" data-id="${esc(n.id)}">Delete notice</button>` : ""}
     </div>`).join("");
 }
 
-$("search").addEventListener("input", renderTable);
-
-// ---------- Quick notice buttons ----------
-document.querySelectorAll("[data-quick]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    $("noticeText").value = btn.dataset.quick;
-  });
-});
-
-// ---------- Post notice ----------
-$("noticeBtn").addEventListener("click", async () => {
-  const text = $("noticeText").value.trim();
-  if (!text) {
-    $("noticeMsg").style.color = "#c62828";
-    $("noticeMsg").textContent = "Please write a message first.";
+function renderStaff() {
+  if (allStaff.length === 0) {
+    $("staffList").innerHTML = `<p class="small">No staff added yet.</p>`;
     return;
   }
+  $("staffList").innerHTML = allStaff.map((s) => `
+    <div class="row-line">
+      <div>
+        <strong>${esc(s.name || s.email)}</strong>
+        <span class="badge b-ok">${esc(s.role)}</span>
+        <div class="small">${esc(s.email)}</div>
+      </div>
+      ${s.role === "owner" ? "" : `<button class="btn-small" data-action="remove-staff" data-id="${esc(s.id)}">Remove</button>`}
+    </div>`).join("");
+}
 
-  $("noticeBtn").disabled = true;
-  try {
-    await addDoc(collection(db, "notices"), {
-      text,
-      date: todayStr(),
-      createdAt: new Date()
-    });
-    $("noticeMsg").style.color = "#2e7d32";
-    $("noticeMsg").textContent = "Notice posted.";
-    $("noticeText").value = "";
-  } catch (err) {
-    $("noticeMsg").style.color = "#c62828";
-    $("noticeMsg").textContent = "Error: " + err.message;
-  } finally {
-    $("noticeBtn").disabled = false;
-  }
-});
+// ---------- Search, filters and report month ----------
+$("search").addEventListener("input", renderTable);
+$("statusFilter").addEventListener("change", renderTable);
+$("shiftFilter").addEventListener("change", renderTable);
+$("reportMonth").addEventListener("change", renderReport);
 
-// ---------- Table buttons: present, pay, edit, delete ----------
+// ---------- Member table buttons ----------
 $("memberRows").addEventListener("click", async (e) => {
-  const action = e.target.dataset.action;
-  const id = e.target.dataset.id;
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
   if (!action || !id) return;
+  const m = allMembers.find((x) => x.id === id);
 
   if (action === "present") {
-    const member = allMembers.find((m) => m.id === id);
     await setDoc(doc(db, "attendance", `${todayStr()}_${id}`), {
       memberId: id,
-      name: member ? member.name : "",
+      name: m ? m.name : "",
       date: todayStr(),
       time: new Date().toLocaleTimeString()
     });
   }
 
-  if (action === "pay") {
-    const member = allMembers.find((m) => m.id === id);
-    $("payMember").value = id;
-    $("payAmount").value = member ? member.feeAmount : "";
-    $("payDate").value = todayStr();
-    $("payMsg").textContent = "";
-    $("payCard").scrollIntoView({ behavior: "smooth", block: "center" });
+  if (action === "view") openProfile(id);
+
+  if (action === "remind" && m) {
+    window.open(waLink(m.phone, reminderText(m)), "_blank");
   }
 
-  if (action === "edit") {
-    const member = allMembers.find((m) => m.id === id);
-    if (member) startEdit(member);
-  }
+  if (action === "pay" && m) fillPayment(m);
 
-  if (action === "delete" && confirm("Delete this member?")) {
+  if (action === "edit" && m) startEdit(m);
+
+  if (action === "delete" && m && confirm(`Delete ${m.name}? This cannot be undone.`)) {
     await deleteDoc(doc(db, "members", id));
     if (editingId === id) resetForm();
   }
 });
 
-// ---------- Delete notice ----------
-$("noticeList").addEventListener("click", async (e) => {
-  if (e.target.dataset.action !== "delete-notice") return;
-  if (confirm("Delete this notice?")) {
-    await deleteDoc(doc(db, "notices", e.target.dataset.id));
-  }
+// ---------- Member profile popup ----------
+async function openProfile(id) {
+  const m = allMembers.find((x) => x.id === id);
+  if (!m) return;
+
+  $("modal").classList.remove("hidden");
+  $("modalBody").innerHTML = "<p>Loading...</p>";
+
+  const snap = await getDocs(query(collection(db, "attendance"), where("memberId", "==", id)));
+  const dates = snap.docs.map((d) => d.data().date).sort().reverse();
+  const pays = allPayments.filter((p) => p.memberId === id);
+
+  const s = feeStatusOf(m);
+  const d = daysLeft(m.feeStart);
+  let statusText = "No fee date";
+  if (s === "expired") statusText = `Expired ${Math.abs(d)} days ago`;
+  else if (s !== "none") statusText = `${d} days left`;
+
+  const canWa = role === "owner" || role === "receptionist";
+  const waButton = canWa && m.phone
+    ? `<a class="btn-wa-link" href="${waLink(m.phone, reminderText(m))}" target="_blank">Send WhatsApp message</a>`
+    : "";
+
+  $("modalBody").innerHTML = `
+    <h2>${esc(m.name)}</h2>
+    <div class="kv">
+      <div><b>Phone:</b> ${esc(m.phone)}</div>
+      <div><b>Email:</b> ${esc(m.email || "-")}</div>
+      <div><b>Address:</b> ${esc(m.address || "-")}</div>
+      <div><b>Date of birth:</b> ${esc(m.dob || "-")}</div>
+      <div><b>Emergency contact:</b> ${esc(m.emName || "-")} ${esc(m.emPhone || "")}</div>
+      <div><b>Shift:</b> ${esc(m.shift)}</div>
+      <div><b>Joined:</b> ${esc(m.joinDate || m.feeStart || "-")}</div>
+      <div><b>Fee:</b> PKR ${esc(m.feeAmount)} from ${esc(m.feeStart || "-")}</div>
+      <div><b>Fee status:</b> ${statusText}</div>
+      <div><b>Member login:</b> ${m.hasLogin ? "Created" : "Not created yet"}</div>
+      <div><b>Notes:</b> ${esc(m.notes || "-")}</div>
+    </div>
+
+    <h3>Attendance (${dates.length} visits)</h3>
+    <div class="chips">
+      ${dates.length ? dates.slice(0, 40).map((x) => `<span>${esc(x)}</span>`).join("") : "<span>No visits yet</span>"}
+    </div>
+
+    <h3>Payments</h3>
+    ${pays.length
+      ? pays.map((p) => `
+        <div class="pay-row">
+          <span>${esc(p.date)} · ${esc(p.method)}</span>
+          <span class="amt">PKR ${esc(p.amount)}</span>
+        </div>`).join("")
+      : `<p class="small">No payments yet.</p>`}
+
+    <div style="margin-top:12px">${waButton}</div>
+  `;
+}
+
+$("modalClose").addEventListener("click", () => $("modal").classList.add("hidden"));
+$("modal").addEventListener("click", (e) => {
+  if (e.target.id === "modal") $("modal").classList.add("hidden");
 });
 
 // ---------- Record payment ----------
+function fillPayment(m) {
+  $("payMember").value = m.id;
+  $("payAmount").value = m.feeAmount || "";
+  $("payDate").value = todayStr();
+  setMsg("payMsg", "");
+  $("payCard").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
 $("payBtn").addEventListener("click", async () => {
   const memberId = $("payMember").value;
   const amount = $("payAmount").value.trim();
@@ -508,60 +877,85 @@ $("payBtn").addEventListener("click", async () => {
   const method = $("payMethod").value;
 
   if (!memberId || !amount || !date) {
-    $("payMsg").style.color = "#c62828";
-    $("payMsg").textContent = "Please select a member and enter the amount and date.";
+    setMsg("payMsg", "Please select a member and enter the amount and date.");
     return;
   }
 
-  const member = allMembers.find((m) => m.id === memberId);
+  const m = allMembers.find((x) => x.id === memberId);
   $("payBtn").disabled = true;
   try {
     await addDoc(collection(db, "payments"), {
       memberId,
-      name: member ? member.name : "",
+      name: m ? m.name : "",
       amount,
       date,
       method,
       createdAt: new Date()
     });
     await updateDoc(doc(db, "members", memberId), { feeStart: date, feeAmount: amount });
-
-    $("payMsg").style.color = "#2e7d32";
-    $("payMsg").textContent = "Payment saved. Fee renewed from " + date + ".";
+    setMsg("payMsg", "Payment saved. Fee renewed from " + date + ".", true);
     $("payAmount").value = "";
     $("payDate").value = todayStr();
   } catch (err) {
-    $("payMsg").style.color = "#c62828";
-    $("payMsg").textContent = "Error: " + err.message;
+    setMsg("payMsg", friendlyError(err));
   } finally {
     $("payBtn").disabled = false;
   }
 });
 
-// ---------- Form: add or edit ----------
+// ---------- Notices ----------
+document.querySelectorAll("[data-quick]").forEach((btn) => {
+  btn.addEventListener("click", () => { $("noticeText").value = btn.dataset.quick; });
+});
+
+$("noticeBtn").addEventListener("click", async () => {
+  const text = $("noticeText").value.trim();
+  if (!text) {
+    setMsg("noticeMsg", "Please write a message first.");
+    return;
+  }
+  $("noticeBtn").disabled = true;
+  try {
+    await addDoc(collection(db, "notices"), { text, date: todayStr(), createdAt: new Date() });
+    setMsg("noticeMsg", "Notice posted.", true);
+    $("noticeText").value = "";
+  } catch (err) {
+    setMsg("noticeMsg", friendlyError(err));
+  } finally {
+    $("noticeBtn").disabled = false;
+  }
+});
+
+$("noticeList").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button");
+  if (!btn || btn.dataset.action !== "delete-notice") return;
+  if (confirm("Delete this notice?")) {
+    await deleteDoc(doc(db, "notices", btn.dataset.id));
+  }
+});
+
+// ---------- Member form: add or edit ----------
 const formFields = {
   name: "fName", phone: "fPhone", email: "fEmail", address: "fAddress",
   dob: "fDob", emName: "fEmName", emPhone: "fEmPhone", joinDate: "fJoin",
   feeStart: "fFeeStart", feeAmount: "fFee", shift: "fShift", notes: "fNotes"
 };
 
-function startEdit(member) {
-  editingId = member.id;
+function startEdit(m) {
+  editingId = m.id;
   for (const [key, inputId] of Object.entries(formFields)) {
-    $(inputId).value = member[key] ?? (key === "shift" ? "Morning" : "");
+    $(inputId).value = m[key] ?? (key === "shift" ? "Morning" : "");
   }
   $("formTitle").textContent = "Edit member";
   $("saveBtn").textContent = "Save changes";
   $("cancelBtn").classList.remove("hidden");
-  $("formMsg").textContent = "";
+  setMsg("formMsg", "");
   $("fName").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function resetForm() {
   editingId = null;
-  for (const inputId of Object.values(formFields)) {
-    $(inputId).value = "";
-  }
+  for (const inputId of Object.values(formFields)) $(inputId).value = "";
   $("fShift").value = "Morning";
   $("formTitle").textContent = "Add member";
   $("saveBtn").textContent = "Add member";
@@ -575,11 +969,11 @@ $("saveBtn").addEventListener("click", async () => {
   for (const [key, inputId] of Object.entries(formFields)) {
     data[key] = $(inputId).value.trim();
   }
+  data.phone = digits(data.phone);
   data.feeAmount = data.feeAmount || "0";
 
-  if (!data.name || !data.phone || !data.feeStart) {
-    $("formMsg").style.color = "#c62828";
-    $("formMsg").textContent = "Please fill in name, phone, and fee start date.";
+  if (!data.name || data.phone.length < 8 || !data.feeStart) {
+    setMsg("formMsg", "Please enter a name, a valid phone number, and the fee start date.");
     return;
   }
 
@@ -587,20 +981,90 @@ $("saveBtn").addEventListener("click", async () => {
   try {
     if (editingId) {
       await updateDoc(doc(db, "members", editingId), { ...data, updatedAt: new Date() });
-      $("formMsg").style.color = "#2e7d32";
-      $("formMsg").textContent = "Changes saved.";
+      setMsg("formMsg", "Changes saved.", true);
     } else {
-      await addDoc(collection(db, "members"), { ...data, createdAt: new Date() });
-      $("formMsg").style.color = "#2e7d32";
-      $("formMsg").textContent = "Member added.";
+      if (allMembers.some((m) => digits(m.phone) === data.phone)) {
+        throw new Error("A member with this phone number already exists.");
+      }
+      await addDoc(collection(db, "members"), { ...data, hasLogin: false, createdAt: new Date() });
+      setMsg("formMsg", "Member added. They can create their login on the member page.", true);
     }
     resetForm();
   } catch (err) {
-    $("formMsg").style.color = "#c62828";
-    $("formMsg").textContent = "Error: " + err.message;
+    setMsg("formMsg", friendlyError(err));
   } finally {
     $("saveBtn").disabled = false;
   }
+});
+
+// ---------- Staff accounts (owner only) ----------
+$("staffBtn").addEventListener("click", async () => {
+  const name = $("stName").value.trim();
+  const email = $("stEmail").value.trim();
+  const pw = $("stPass").value;
+  const newRole = $("stRole").value;
+
+  if (!name || !email || pw.length < 6) {
+    setMsg("staffMsg", "Enter the name, email, and a password of at least 6 characters.");
+    return;
+  }
+
+  $("staffBtn").disabled = true;
+  try {
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pw);
+    await setDoc(doc(db, "admins", cred.user.uid), {
+      name,
+      email,
+      role: newRole,
+      createdAt: new Date()
+    });
+    await signOut(secondaryAuth);
+    $("stName").value = "";
+    $("stEmail").value = "";
+    $("stPass").value = "";
+    setMsg("staffMsg", `${name} can now log in as ${newRole}.`, true);
+  } catch (err) {
+    setMsg("staffMsg", friendlyError(err));
+  } finally {
+    $("staffBtn").disabled = false;
+  }
+});
+
+$("staffList").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button");
+  if (!btn || btn.dataset.action !== "remove-staff") return;
+  if (confirm("Remove this person's admin access? Their login will stay, but they can no longer open the admin panel.")) {
+    await deleteDoc(doc(db, "admins", btn.dataset.id));
+  }
+});
+
+// ---------- Export ----------
+$("exportMembersBtn").addEventListener("click", () => {
+  const rows = [["Name", "Phone", "Email", "Address", "Date of birth", "Shift", "Fee (PKR)", "Fee start", "Fee status", "Emergency name", "Emergency phone", "Notes"]];
+  lastMembersShown.forEach((m) => {
+    rows.push([m.name, m.phone, m.email, m.address, m.dob, m.shift, m.feeAmount, m.feeStart, feeStatusOf(m), m.emName, m.emPhone, m.notes]);
+  });
+  downloadCsv(`gym-members-${todayStr()}.csv`, rows);
+});
+
+$("exportReportBtn").addEventListener("click", () => {
+  if (!lastReport) return;
+  const r = lastReport;
+  const rows = [
+    ["Monthly report", r.month],
+    [],
+    ["Summary"],
+    ["New members", r.newMembers.length],
+    ["Collected (PKR)", r.collected],
+    ["Not paid", r.unpaid.length],
+    [],
+    ["New members"],
+    ["Name", "Phone", "Shift", "Fee (PKR)"]
+  ];
+  r.newMembers.forEach((m) => rows.push([m.name, m.phone, m.shift, m.feeAmount]));
+  rows.push([], ["Not paid this month"], ["Name", "Phone", "Shift", "Fee (PKR)", "Fee status"]);
+  r.unpaid.forEach((m) => rows.push([m.name, m.phone, m.shift, m.feeAmount, feeStatusOf(m)]));
+  downloadCsv(`gym-report-${r.month}.csv`, rows);
 });
 </script>
 </body>
