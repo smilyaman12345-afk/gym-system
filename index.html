@@ -6,144 +6,320 @@
 <title>Gym Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
-  :root { --red:#e53935; --dark:#1e1e2d; --bg:#f4f6fb; --card:#fff; --green:#2e7d32; --amber:#f9a825; --muted:#6b7280; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: Arial, sans-serif; background: var(--bg); color:#222; min-height:100vh; }
+  :root {
+    --bg:#0d0d14; --card:#171724; --card2:#1f1f32; --line:#2c2c44;
+    --text:#f5f5f7; --muted:#a9a9c0;
+    --red:#ff4d4d; --orange:#ff9f1a; --green:#22c55e; --blue:#38bdf8;
+    --purple:#a855f7; --yellow:#facc15;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; font-family:Arial, Helvetica, sans-serif; color:var(--text); min-height:100vh;
+    background: radial-gradient(circle at top, #2b0f16 0%, var(--bg) 55%, #07070c 100%);
+    background-attachment: fixed;
+  }
   .hidden { display:none !important; }
-  .login-wrap { min-height:100vh; display:flex; justify-content:center; align-items:center; background: linear-gradient(135deg,#1e1e2d,#e53935); padding:16px; }
-  .card { background:var(--card); padding:24px; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,0.12); }
-  .login-card { width:100%; max-width:360px; }
-  h1 { margin:0 0 4px; font-size:24px; }
-  h2 { margin:0 0 12px; font-size:18px; }
-  h3 { margin:16px 0 8px; font-size:15px; color:#5f27cd; }
-  .sub { color:var(--muted); margin:0 0 16px; font-size:14px; }
-  .label { display:block; color:var(--muted); font-size:13px; margin-top:8px; }
-  input, select, textarea { width:100%; padding:12px; margin:6px 0; border:1px solid #d1d5db; border-radius:8px; font-size:16px; background:#fff; font-family:inherit; }
-  textarea { min-height:70px; resize:vertical; }
-  button { padding:12px 16px; border:none; border-radius:8px; font-size:15px; cursor:pointer; color:#fff; background:var(--red); }
-  button:hover { opacity:0.92; }
-  button:disabled { background:#9ca3af; cursor:default; }
-  .btn-full { width:100%; margin-top:8px; }
-  .btn-dark { background:#374151; }
-  .btn-quick { background:#f3f4f6; color:#222; padding:8px 12px; font-size:13px; margin:4px 4px 0 0; border:1px solid #d1d5db; }
-  .btn-small { padding:6px 10px; font-size:13px; background:#ef4444; }
-  .btn-edit { padding:6px 10px; font-size:13px; background:#1e88e5; }
-  .btn-pay { padding:6px 10px; font-size:13px; background:#8e24aa; }
-  .btn-present { padding:6px 10px; font-size:13px; background:var(--green); }
-  .btn-view { padding:6px 10px; font-size:13px; background:#6b7280; }
-  .btn-wa { padding:6px 10px; font-size:13px; background:#25d366; }
-  .btn-export { background:#374151; margin:8px 0; width:100%; }
-  .btn-wa-link { display:block; text-align:center; background:#25d366; color:#fff; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold; }
-  .wa-mini { color:#128c7e; font-size:12px; font-weight:bold; margin-left:6px; text-decoration:none; }
-  .msg { min-height:20px; margin-top:10px; font-size:14px; color:#c62828; }
-  header { background:var(--dark); color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
-  header h1 { color:#fff; font-size:20px; }
-  header span { font-size:13px; opacity:0.8; }
-  .role-badge { background:var(--amber); color:#222 !important; opacity:1 !important; padding:3px 10px; border-radius:12px; font-size:12px; margin-left:8px; text-transform:capitalize; font-weight:bold; }
-  .container { max-width:1150px; margin:0 auto; padding:16px; }
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:16px; }
-  .stat { background:var(--card); border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:5px solid var(--red); }
-  .stat.green { border-color:var(--green); }
-  .stat.amber { border-color:var(--amber); }
-  .stat.blue { border-color:#1e88e5; }
-  .stat.purple { border-color:#8e24aa; }
-  .stat .num { font-size:26px; font-weight:bold; }
-  .stat .lbl { color:var(--muted); font-size:13px; }
-  .notice-banner { background:#fff8e1; border-left:5px solid var(--amber); border-radius:10px; padding:14px 16px; margin-bottom:16px; }
-  .notice-banner strong { display:block; margin-bottom:4px; }
-  .grid { display:grid; grid-template-columns:1fr; gap:16px; }
-  @media (min-width:900px) { .grid { grid-template-columns: 360px 1fr; align-items:start; } }
-  .table-wrap { overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
-  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #eee; vertical-align:top; }
-  th { color:var(--muted); font-weight:600; font-size:13px; white-space:nowrap; }
+
+  /* ---------- Login ---------- */
+  .login-wrap { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; gap:18px; }
+  .login-hero { text-align:center; }
+  .login-hero h1 { font-size:32px; margin:6px 0 4px; letter-spacing:1px; background:linear-gradient(90deg,#ff4d4d,#ff9f1a,#facc15); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .login-hero p { color:var(--muted); margin:0; }
+  .login-card { width:100%; max-width:380px; }
+
+  /* 3D spinning dumbbell */
+  .scene { perspective:600px; display:inline-block; }
+  .dumbbell3d { display:inline-block; transform-style:preserve-3d; animation: spin 7s linear infinite; filter: drop-shadow(0 10px 14px rgba(0,0,0,.6)); }
+  @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: linear-gradient(160deg, #1f1f33, #13131f);
+    border:1px solid var(--line); border-radius:18px; padding:20px; margin-bottom:16px;
+    box-shadow: 0 14px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .card h2 { margin:0 0 6px; font-size:19px; color:#fff; display:flex; align-items:center; gap:8px; }
+  .card .desc { color:var(--muted); font-size:13px; margin:0 0 12px; }
+  .card h3 { margin:16px 0 8px; font-size:15px; color:var(--orange); }
+  .label { display:block; color:var(--muted); font-size:13px; margin:10px 0 2px; }
   .small { color:var(--muted); font-size:12px; margin-top:2px; }
-  .actions { white-space:nowrap; }
-  .actions button { margin:2px 4px 2px 0; }
-  .badge { padding:4px 8px; border-radius:20px; font-size:12px; color:#fff; white-space:nowrap; }
-  .b-ok { background:var(--green); }
-  .b-soon { background:var(--amber); color:#222; }
-  .b-exp { background:#c62828; }
-  .section-gap { margin-top:16px; }
+
+  /* ---------- Inputs ---------- */
+  input, select, textarea {
+    width:100%; padding:12px; margin:6px 0; border:1px solid #3a3a58; border-radius:10px;
+    font-size:16px; background:#0f0f1a; color:#fff; font-family:inherit; outline:none;
+  }
+  input:focus, select:focus, textarea:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(255,159,26,.2); }
+  input::placeholder, textarea::placeholder { color:#7d7d96; }
+  select option { background:#1a1a2a; color:#fff; }
+  textarea { min-height:80px; resize:vertical; }
+
+  /* ---------- Buttons ---------- */
+  button {
+    padding:12px 16px; border:none; border-radius:12px; font-size:15px; cursor:pointer; color:#fff; font-weight:bold;
+    background: linear-gradient(135deg, #ff4d4d, #ff9f1a);
+    box-shadow: 0 5px 0 #8a1c1c, 0 10px 18px rgba(0,0,0,.35);
+    transition: transform .08s, box-shadow .08s;
+  }
+  button:active { transform: translateY(4px); box-shadow: 0 1px 0 #8a1c1c; }
+  button:disabled { background:#4b4b63; box-shadow:0 5px 0 #2b2b3d; cursor:default; }
+  .btn-full { width:100%; margin-top:8px; }
+  .btn-dark { background: linear-gradient(135deg,#3b3b5c,#25253a); box-shadow:0 5px 0 #151524, 0 10px 18px rgba(0,0,0,.35); }
+  .btn-blue { background: linear-gradient(135deg,#0ea5e9,#6366f1); box-shadow:0 5px 0 #3730a3, 0 10px 18px rgba(0,0,0,.35); }
+  .btn-green { background: linear-gradient(135deg,#22c55e,#10b981); box-shadow:0 5px 0 #0f7a4a, 0 10px 18px rgba(0,0,0,.35); }
+  .btn-purple { background: linear-gradient(135deg,#a855f7,#ec4899); box-shadow:0 5px 0 #6b21a8, 0 10px 18px rgba(0,0,0,.35); }
+  .btn-wa { background: linear-gradient(135deg,#25d366,#128c7e); box-shadow:0 5px 0 #0b5e54, 0 10px 18px rgba(0,0,0,.35); }
+  .btn-sm { padding:7px 11px; font-size:13px; border-radius:10px; margin:2px 3px 2px 0; }
+  .btn-danger { background: linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 5px 0 #7f1d1d, 0 10px 18px rgba(0,0,0,.35); }
+  .btn-quick { background:#24243a; color:#fff; font-size:13px; padding:9px 12px; margin:4px 6px 0 0; box-shadow:0 4px 0 #0f0f1a; border:1px solid #3a3a58; }
+  .msg { min-height:20px; margin-top:10px; font-size:14px; color:#ff6b6b; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:14px 18px; background:rgba(13,13,20,.92); backdrop-filter: blur(8px); border-bottom:1px solid var(--line);
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .logo { font-size:34px; display:inline-block; animation: float 3s ease-in-out infinite; }
+  .brand-title { font-size:20px; font-weight:900; letter-spacing:2px; background:linear-gradient(90deg,#ff4d4d,#ff9f1a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .brand-sub { font-size:12px; color:var(--muted); }
+  .top-right { display:flex; align-items:center; gap:10px; }
+  .role-badge { background: linear-gradient(135deg,#facc15,#f59e0b); color:#111; padding:5px 12px; border-radius:14px; font-size:12px; font-weight:bold; text-transform:uppercase; }
+  .btn-logout { background:#2a2a40; box-shadow:0 4px 0 #111; }
+
+  /* ---------- Navigation ---------- */
+  .nav { display:flex; gap:8px; overflow-x:auto; padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(20,20,32,.6); }
+  .nav-btn { white-space:nowrap; background:#22223a; color:var(--muted); box-shadow:0 4px 0 #101020; border:1px solid #33334d; }
+  .nav-btn.active { background: linear-gradient(135deg,#ff4d4d,#ff9f1a); color:#fff; border-color:transparent; }
+
+  .container { max-width:1200px; margin:0 auto; padding:16px; }
+  .section { display:none; }
+  .section.active { display:block; }
+
+  /* ---------- Hero and quotes ---------- */
+  .hero {
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    background: linear-gradient(120deg, #7f1d1d, #ea580c 60%, #facc15);
+    border-radius:22px; padding:22px; margin-bottom:16px; box-shadow: 0 16px 30px rgba(0,0,0,.5);
+    position:relative; overflow:hidden;
+  }
+  .hero h1 { margin:0; font-size:26px; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .hero p { margin:4px 0 0; color:#fff7ed; }
+  .quote-box {
+    background: rgba(0,0,0,.35); border-radius:16px; padding:14px 18px; margin-top:14px;
+    font-size:17px; font-weight:bold; color:#fff; min-height:52px; display:flex; align-items:center;
+    transition: opacity .4s;
+  }
+  .quote-box.fade { opacity:0; }
+  .bodybuilder { width:150px; height:150px; flex-shrink:0; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 12px 16px rgba(0,0,0,.5)); }
+
+  /* ---------- 3D stat tiles ---------- */
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:16px; perspective:900px; }
+  .tile3d {
+    border-radius:18px; padding:18px; color:#fff; position:relative; overflow:hidden;
+    box-shadow: 0 10px 0 rgba(0,0,0,.45), 0 18px 30px rgba(0,0,0,.45);
+    transition: transform .25s ease;
+    transform-style: preserve-3d;
+  }
+  .tile3d:hover { transform: rotateX(10deg) rotateY(-6deg) translateY(-4px); }
+  .tile3d .icon { font-size:30px; display:block; margin-bottom:6px; text-shadow:0 4px 6px rgba(0,0,0,.4); }
+  .tile3d .num { font-size:30px; font-weight:900; text-shadow:0 3px 0 rgba(0,0,0,.3); }
+  .tile3d .lbl { font-size:13px; opacity:.95; }
+  .t-red { background: linear-gradient(135deg,#ef4444,#f97316); }
+  .t-blue { background: linear-gradient(135deg,#0ea5e9,#6366f1); }
+  .t-green { background: linear-gradient(135deg,#22c55e,#14b8a6); }
+  .t-yellow { background: linear-gradient(135deg,#facc15,#f59e0b); color:#1c1400; }
+  .t-purple { background: linear-gradient(135deg,#a855f7,#ec4899); }
+  .t-dark { background: linear-gradient(135deg,#334155,#1e293b); }
+
+  /* ---------- Layout ---------- */
+  .two { display:grid; grid-template-columns:1fr; gap:16px; }
+  @media (min-width:960px) { .two { grid-template-columns: 380px 1fr; align-items:start; } }
+  .two.equal { grid-template-columns:1fr; }
+  @media (min-width:960px) { .two.equal { grid-template-columns: 1fr 1fr; } }
+
+  /* ---------- Filters and table ---------- */
   .filters { display:flex; flex-wrap:wrap; gap:8px; }
-  .filters input, .filters select { margin:4px 0; width:auto; flex:1; min-width:140px; }
-  .notice-item { border-bottom:1px solid #eee; padding:12px 0; }
-  .notice-item:last-child { border-bottom:none; }
-  .row-line { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 0; border-bottom:1px solid #eee; font-size:14px; }
+  .filters input, .filters select { margin:4px 0; width:auto; flex:1; min-width:150px; }
+  .table-wrap { overflow-x:auto; border-radius:12px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:12px 10px; border-bottom:1px solid #26263d; vertical-align:middle; }
+  th { color:var(--orange); font-weight:bold; font-size:13px; white-space:nowrap; background:#1a1a2c; }
+  tr:hover td { background:#1c1c2e; }
+  .member-cell { display:flex; align-items:center; gap:10px; }
+  .avatar {
+    width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-weight:bold; color:#fff; background: linear-gradient(135deg,#ff4d4d,#facc15);
+    box-shadow: 0 4px 0 #7f1d1d, 0 8px 14px rgba(0,0,0,.4);
+  }
+  .actions { white-space:nowrap; }
+  .badge { padding:5px 10px; border-radius:20px; font-size:12px; color:#fff; white-space:nowrap; font-weight:bold; }
+  .b-ok { background:var(--green); }
+  .b-soon { background:var(--yellow); color:#1c1400; }
+  .b-exp { background:#ef4444; }
+  .b-none { background:#475569; }
+  .btn-present { background: linear-gradient(135deg,#22c55e,#10b981); box-shadow:0 4px 0 #0f7a4a; }
+
+  /* ---------- Lists ---------- */
+  .row-line { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 0; border-bottom:1px solid #26263d; font-size:14px; }
   .row-line:last-child { border-bottom:none; }
-  .report-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
-  .rbox { background:#f3f4f6; border-radius:10px; padding:12px 6px; text-align:center; }
-  .rbox b { display:block; font-size:20px; }
-  .rbox span { font-size:12px; color:var(--muted); }
-  .pay-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #ddd; font-size:14px; }
+  .notice-item { border-bottom:1px solid #26263d; padding:14px 0; }
+  .notice-item:last-child { border-bottom:none; }
+  .notice-item .txt { font-size:15px; }
+  .pay-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px dashed #33334d; font-size:14px; }
   .pay-row:last-child { border-bottom:none; }
-  .amt { font-weight:bold; color:#10ac84; }
-  .chips span { display:inline-block; background:#eef0f7; padding:4px 8px; border-radius:12px; margin:2px; font-size:12px; }
-  .kv div { margin:6px 0; font-size:14px; }
-  .modal { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50; }
-  .modal-box { background:#fff; border-radius:14px; padding:20px; max-width:560px; width:100%; max-height:90vh; overflow:auto; }
-  .qr-box { display:flex; justify-content:center; background:#fff; border:1px solid #eee; border-radius:12px; padding:14px; margin:10px 0; min-height:120px; align-items:center; }
-  .qr-full { position:fixed; inset:0; background:#fff; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; }
-  .qr-full p { font-size:22px; font-weight:bold; color:#222; margin:0; }
-  .qr-full button { background:#374151; }
+  .amt { font-weight:bold; color:#4ade80; }
+  .wa-mini { color:#4ade80; font-size:13px; font-weight:bold; margin-left:6px; text-decoration:none; }
+
+  /* ---------- Report ---------- */
+  .report-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
+  .rbox { border-radius:14px; padding:14px 6px; text-align:center; color:#fff; box-shadow:0 6px 0 rgba(0,0,0,.4); }
+  .rbox:nth-child(1) { background: linear-gradient(135deg,#0ea5e9,#6366f1); }
+  .rbox:nth-child(2) { background: linear-gradient(135deg,#22c55e,#14b8a6); }
+  .rbox:nth-child(3) { background: linear-gradient(135deg,#ef4444,#f97316); }
+  .rbox b { display:block; font-size:22px; }
+  .rbox span { font-size:12px; opacity:.95; }
+
+  /* ---------- Gate QR ---------- */
+  .qr-box { display:flex; justify-content:center; align-items:center; background:#fff; border-radius:16px; padding:14px; margin:12px 0; min-height:150px; box-shadow: 0 10px 0 rgba(0,0,0,.4); }
+  .qr-placeholder { color:#555; font-size:14px; }
+  .qr-full { position:fixed; inset:0; background:#0d0d14; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:20px; }
+  .qr-full .qr-white { background:#fff; border-radius:20px; padding:18px; box-shadow:0 14px 0 rgba(0,0,0,.4); }
+  .qr-full p { font-size:24px; font-weight:bold; color:#fff; margin:0; text-align:center; }
+
+  /* ---------- Modal ---------- */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50; }
+  .modal-box { background:linear-gradient(160deg,#1f1f33,#13131f); border:1px solid var(--line); border-radius:20px; padding:22px; max-width:580px; width:100%; max-height:90vh; overflow:auto; box-shadow:0 20px 40px rgba(0,0,0,.6); }
+  .kv div { margin:8px 0; font-size:14px; }
+  .kv b { color:var(--orange); }
+  .chips span { display:inline-block; background:#26263d; color:#fff; padding:5px 10px; border-radius:12px; margin:3px; font-size:12px; }
+  .btn-wa-link { display:block; text-align:center; background: linear-gradient(135deg,#25d366,#128c7e); color:#fff; padding:13px; border-radius:12px; text-decoration:none; font-weight:bold; box-shadow:0 5px 0 #0b5e54; }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ============ LOGIN ============ -->
 <div class="login-wrap" id="loginBox">
+  <div class="login-hero">
+    <div class="scene">
+      <svg class="dumbbell3d" viewBox="0 0 220 120" width="230" height="125">
+        <defs>
+          <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#facc15"/><stop offset="1" stop-color="#f97316"/>
+          </linearGradient>
+        </defs>
+        <rect x="6" y="34" width="18" height="52" rx="7" fill="#ef4444"/>
+        <rect x="196" y="34" width="18" height="52" rx="7" fill="#ef4444"/>
+        <rect x="22" y="22" width="26" height="76" rx="8" fill="url(#dg)"/>
+        <rect x="172" y="22" width="26" height="76" rx="8" fill="url(#dg)"/>
+        <rect x="46" y="50" width="128" height="20" rx="9" fill="#a855f7"/>
+      </svg>
+    </div>
+    <h1>GYM ADMIN</h1>
+    <p>Owner and staff sign in</p>
+  </div>
   <div class="card login-card">
-    <h1>Gym Login</h1>
-    <p class="sub">Owner and staff sign in</p>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button class="btn-full" id="loginBtn">Login</button>
+    <input id="email" type="email" placeholder="📧 Email">
+    <input id="password" type="password" placeholder="🔒 Password">
+    <button class="btn-full" id="loginBtn">Login 🚀</button>
     <div class="msg" id="loginMsg"></div>
   </div>
 </div>
 
-<!-- ADMIN -->
+<!-- ============ ADMIN ============ -->
 <div id="adminBox" class="hidden">
-  <header>
-    <div>
-      <h1>Gym Admin</h1>
-      <span id="userEmail"></span>
-      <span class="role-badge" id="roleBadge"></span>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🏋️</span>
+      <div>
+        <div class="brand-title">GYM ADMIN</div>
+        <div class="brand-sub" id="userEmail"></div>
+      </div>
     </div>
-    <button class="btn-dark" id="logoutBtn">Logout</button>
+    <div class="top-right">
+      <span class="role-badge" id="roleBadge"></span>
+      <button class="btn-logout" id="logoutBtn">Logout</button>
+    </div>
   </header>
 
+  <nav class="nav">
+    <button class="nav-btn active" data-sec="secDash" data-roles="all">🏠 Dashboard</button>
+    <button class="nav-btn" data-sec="secMembers" data-roles="all">👥 Members</button>
+    <button class="nav-btn" data-sec="secMoney" data-roles="front">💰 Money & Reports</button>
+    <button class="nav-btn" data-sec="secNotices" data-roles="all">📢 Notices</button>
+    <button class="nav-btn" data-sec="secStaff" data-roles="owner">🔐 Staff</button>
+  </nav>
+
   <div class="container">
-    <div class="notice-banner hidden" id="latestNoticeBox">
-      <strong>Latest notice to members</strong>
-      <span id="latestNotice"></span>
-    </div>
 
-    <div class="stats">
-      <div class="stat"><div class="num" id="totalCount">0</div><div class="lbl">Total members</div></div>
-      <div class="stat blue"><div class="num" id="presentCount">0</div><div class="lbl">Present today</div></div>
-      <div class="stat green"><div class="num" id="activeCount">0</div><div class="lbl">Active fees</div></div>
-      <div class="stat amber"><div class="num" id="soonCount">0</div><div class="lbl">Expiring in 5 days</div></div>
-      <div class="stat"><div class="num" id="expiredCount">0</div><div class="lbl">Expired fees</div></div>
-      <div class="stat purple" id="collectedStat"><div class="num" id="collectedCount">0</div><div class="lbl">Collected this month (PKR)</div></div>
-    </div>
+    <!-- ===== DASHBOARD ===== -->
+    <section class="section active" id="secDash">
+      <div class="hero">
+        <div>
+          <h1>Train hard. Run smart. 💪</h1>
+          <p>Your gym at a glance: members, fees, attendance and money.</p>
+          <div class="quote-box" id="quoteBox"></div>
+        </div>
+        <svg class="bodybuilder" viewBox="0 0 160 160" aria-hidden="true">
+          <circle cx="80" cy="80" r="74" fill="rgba(0,0,0,.25)"/>
+          <circle cx="80" cy="46" r="18" fill="#fde68a"/>
+          <path d="M52 66 Q80 56 108 66 L114 122 Q80 132 46 122 Z" fill="#1f2937"/>
+          <path d="M52 70 Q30 80 26 104 Q34 112 42 100 Q46 84 58 78 Z" fill="#fde68a"/>
+          <path d="M108 70 Q130 60 138 40 Q146 36 146 46 Q140 78 118 84 Z" fill="#fde68a"/>
+          <path d="M74 120 L70 152 L84 152 L84 122 Z" fill="#334155"/>
+          <path d="M86 120 L92 152 L104 150 L98 120 Z" fill="#334155"/>
+          <ellipse cx="62" cy="88" rx="10" ry="12" fill="#f97316" opacity=".5"/>
+          <ellipse cx="98" cy="88" rx="10" ry="12" fill="#f97316" opacity=".5"/>
+          <text x="80" y="18" text-anchor="middle" font-size="16" fill="#facc15">💪 NO PAIN</text>
+        </svg>
+      </div>
 
-    <div class="grid">
-      <!-- LEFT COLUMN -->
-      <div>
-        <!-- GATE QR -->
+      <div class="card hidden" id="latestNoticeBox" style="border-color:#facc15">
+        <h2>📢 Latest notice to members</h2>
+        <p id="latestNotice" style="font-size:16px;margin:6px 0 0"></p>
+      </div>
+
+      <div class="stats">
+        <div class="tile3d t-blue"><span class="icon">👥</span><div class="num" id="totalCount">0</div><div class="lbl">Total members</div></div>
+        <div class="tile3d t-purple"><span class="icon">✅</span><div class="num" id="presentCount">0</div><div class="lbl">Present today</div></div>
+        <div class="tile3d t-green"><span class="icon">💳</span><div class="num" id="activeCount">0</div><div class="lbl">Active fees</div></div>
+        <div class="tile3d t-yellow"><span class="icon">⏰</span><div class="num" id="soonCount">0</div><div class="lbl">Expiring in 5 days</div></div>
+        <div class="tile3d t-red"><span class="icon">⚠️</span><div class="num" id="expiredCount">0</div><div class="lbl">Expired fees</div></div>
+        <div class="tile3d t-dark" id="collectedStat"><span class="icon">💰</span><div class="num" id="collectedCount">0</div><div class="lbl">Collected this month (PKR)</div></div>
+      </div>
+
+      <div class="two equal">
         <div class="card" id="gateCard">
-          <h2>Gate QR code</h2>
-          <p class="small">Show this at the entrance. Members scan it with the My Gym app to mark attendance. You don't need to change it daily.</p>
-          <div class="qr-box"><canvas id="qrCanvas"></canvas><span class="small" id="qrPlaceholder">No QR created yet.</span></div>
+          <h2>🚪 Gate QR code</h2>
+          <p class="desc">Show this at the entrance. Members scan it with the My Gym app to mark attendance. No daily change needed.</p>
+          <div class="qr-box">
+            <canvas id="qrCanvas"></canvas>
+            <span class="qr-placeholder" id="qrPlaceholder">No QR created yet.</span>
+          </div>
           <div class="small" id="gateInfo"></div>
-          <button class="btn-full" id="genQrBtn">Generate new QR</button>
-          <button class="btn-full btn-dark" id="fullQrBtn">Show full screen</button>
+          <button class="btn-full btn-green" id="genQrBtn">🔄 Generate new QR</button>
+          <button class="btn-full btn-blue" id="fullQrBtn">🖥️ Show full screen</button>
           <div class="msg" id="gateMsg"></div>
         </div>
 
-        <div class="card section-gap" id="memberFormCard">
-          <h2 id="formTitle">Add member</h2>
+        <div class="card">
+          <h2>🔥 Quick tips</h2>
+          <p class="desc">Things you can do right now.</p>
+          <div class="row-line"><span>✅ Mark members present when they arrive</span></div>
+          <div class="row-line"><span>💰 Record payments to restart a fee</span></div>
+          <div class="row-line"><span>⏰ Send WhatsApp reminders to expiring members</span></div>
+          <div class="row-line"><span>📢 Post notices your members will see</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MEMBERS ===== -->
+    <section class="section" id="secMembers">
+      <div class="two">
+        <div class="card" id="memberFormCard">
+          <h2 id="formTitle">➕ Add member</h2>
+          <p class="desc">Fields marked * are required.</p>
           <input id="fName" placeholder="Full name *">
           <input id="fPhone" type="tel" placeholder="Phone number * (e.g. 03001234567)">
           <input id="fEmail" type="email" placeholder="Email (optional)">
@@ -158,8 +334,8 @@
           <input id="fFeeStart" type="date">
           <input id="fFee" type="number" placeholder="Fee amount (PKR)">
           <select id="fShift">
-            <option value="Morning">Morning shift</option>
-            <option value="Evening">Evening shift</option>
+            <option value="Morning">🌅 Morning shift</option>
+            <option value="Evening">🌙 Evening shift</option>
           </select>
           <textarea id="fNotes" placeholder="Notes (optional)"></textarea>
           <button class="btn-full" id="saveBtn">Add member</button>
@@ -167,60 +343,10 @@
           <div class="msg" id="formMsg"></div>
         </div>
 
-        <div class="card section-gap" id="payCard">
-          <h2>Record payment</h2>
-          <label class="label" for="payMember">Member</label>
-          <select id="payMember"></select>
-          <label class="label" for="payAmount">Amount paid (PKR)</label>
-          <input id="payAmount" type="number" placeholder="Amount">
-          <label class="label" for="payDate">Payment date (fee starts from this day)</label>
-          <input id="payDate" type="date">
-          <label class="label" for="payMethod">Payment method</label>
-          <select id="payMethod">
-            <option value="Cash">Cash</option>
-            <option value="Bank transfer">Bank transfer</option>
-            <option value="JazzCash">JazzCash</option>
-            <option value="Easypaisa">Easypaisa</option>
-          </select>
-          <button class="btn-full" id="payBtn">Save payment</button>
-          <div class="msg" id="payMsg"></div>
-        </div>
-
-        <div class="card section-gap" id="noticeCard">
-          <h2>Post notice to members</h2>
-          <div>
-            <button class="btn-quick" data-quick="Gym is closed today. Sorry for the inconvenience.">Gym closed today</button>
-            <button class="btn-quick" data-quick="Gym timings have changed. Please check with the reception.">Timings changed</button>
-            <button class="btn-quick" data-quick="Reminder: Please renew your fee to keep training without a break.">Fee reminder</button>
-          </div>
-          <textarea id="noticeText" placeholder="Write a message for members..."></textarea>
-          <button class="btn-full" id="noticeBtn">Post notice</button>
-          <div class="msg" id="noticeMsg"></div>
-        </div>
-
-        <div class="card section-gap" id="staffCard">
-          <h2>Staff accounts</h2>
-          <p class="small">Only you can add or remove staff. Receptionists manage members, payments and notices. Trainers can only mark attendance.</p>
-          <input id="stName" placeholder="Staff name">
-          <input id="stEmail" type="email" placeholder="Staff email">
-          <input id="stPass" type="password" placeholder="Temporary password (min 6 characters)">
-          <select id="stRole">
-            <option value="receptionist">Receptionist</option>
-            <option value="trainer">Trainer</option>
-          </select>
-          <button class="btn-full" id="staffBtn">Create staff login</button>
-          <div class="msg" id="staffMsg"></div>
-          <h3>Current staff</h3>
-          <div id="staffList"></div>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN -->
-      <div>
         <div class="card">
-          <h2>Members</h2>
+          <h2>👥 Members</h2>
           <div class="filters">
-            <input id="search" placeholder="Search name, phone or address">
+            <input id="search" placeholder="🔍 Search name, phone or address">
             <select id="statusFilter">
               <option value="all">All fee status</option>
               <option value="active">Active</option>
@@ -234,7 +360,7 @@
               <option value="Evening">Evening</option>
             </select>
           </div>
-          <button class="btn-export" id="exportMembersBtn">⬇ Download this list (CSV)</button>
+          <button class="btn-full btn-blue" id="exportMembersBtn">⬇ Download this list (CSV)</button>
           <div class="table-wrap">
             <table>
               <thead>
@@ -244,9 +370,36 @@
             </table>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="card section-gap" id="reportCard">
-          <h2>Monthly report</h2>
+    <!-- ===== MONEY & REPORTS ===== -->
+    <section class="section" id="secMoney">
+      <div class="two">
+        <div>
+          <div class="card" id="payCard">
+            <h2>💰 Record payment</h2>
+            <p class="desc">Saving a payment restarts the member's fee from that date.</p>
+            <label class="label" for="payMember">Member</label>
+            <select id="payMember"></select>
+            <label class="label" for="payAmount">Amount paid (PKR)</label>
+            <input id="payAmount" type="number" placeholder="Amount">
+            <label class="label" for="payDate">Payment date (fee starts from this day)</label>
+            <input id="payDate" type="date">
+            <label class="label" for="payMethod">Payment method</label>
+            <select id="payMethod">
+              <option value="Cash">💵 Cash</option>
+              <option value="Bank transfer">🏦 Bank transfer</option>
+              <option value="JazzCash">📱 JazzCash</option>
+              <option value="Easypaisa">📱 Easypaisa</option>
+            </select>
+            <button class="btn-full btn-green" id="payBtn">Save payment</button>
+            <div class="msg" id="payMsg"></div>
+          </div>
+        </div>
+
+        <div class="card" id="reportCard">
+          <h2>📊 Monthly report</h2>
           <label class="label" for="reportMonth">Choose month</label>
           <input id="reportMonth" type="month">
           <div class="report-grid">
@@ -254,30 +407,73 @@
             <div class="rbox"><b id="rCollected">0</b><span>Collected (PKR)</span></div>
             <div class="rbox"><b id="rUnpaid">0</b><span>Not paid</span></div>
           </div>
-          <h3>New members</h3>
+          <h3>🆕 New members</h3>
           <div id="rNewList"></div>
-          <h3>Not paid this month</h3>
+          <h3>⚠️ Not paid this month</h3>
           <div id="rUnpaidList"></div>
-          <button class="btn-export" id="exportReportBtn">⬇ Download report (CSV)</button>
-          <p class="small">"Not paid" means no payment was recorded in the chosen month for a member who had joined by then.</p>
+          <button class="btn-full btn-blue" id="exportReportBtn">⬇ Download report (CSV)</button>
+          <p class="small">"Not paid" means no payment in the chosen month for a member who had joined by then.</p>
         </div>
+      </div>
 
-        <div class="card section-gap" id="paymentsCard">
-          <h2>Payment history</h2>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Date</th><th>Member</th><th>Amount</th><th>Method</th></tr></thead>
-              <tbody id="paymentRows"></tbody>
-            </table>
+      <div class="card" id="paymentsCard">
+        <h2>🧾 Payment history</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Member</th><th>Amount</th><th>Method</th></tr></thead>
+            <tbody id="paymentRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== NOTICES ===== -->
+    <section class="section" id="secNotices">
+      <div class="two equal">
+        <div class="card" id="noticeCard">
+          <h2>📢 Post notice to members</h2>
+          <p class="desc">Members see the latest notice on their page.</p>
+          <div>
+            <button class="btn-quick" data-quick="Gym is closed today. Sorry for the inconvenience.">🚫 Gym closed today</button>
+            <button class="btn-quick" data-quick="Gym timings have changed. Please check with the reception.">🕒 Timings changed</button>
+            <button class="btn-quick" data-quick="Reminder: Please renew your fee to keep training without a break.">💳 Fee reminder</button>
           </div>
+          <textarea id="noticeText" placeholder="Write a message for members..."></textarea>
+          <button class="btn-full" id="noticeBtn">Post notice</button>
+          <div class="msg" id="noticeMsg"></div>
         </div>
 
-        <div class="card section-gap">
-          <h2>Notices sent</h2>
+        <div class="card">
+          <h2>📋 Notices sent</h2>
           <div id="noticeList"></div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- ===== STAFF (owner only) ===== -->
+    <section class="section" id="secStaff">
+      <div class="two equal">
+        <div class="card" id="staffCard">
+          <h2>🔐 Staff accounts</h2>
+          <p class="desc">Only you can add or remove staff. Receptionists manage members, payments and notices. Trainers can only mark attendance.</p>
+          <input id="stName" placeholder="Staff name">
+          <input id="stEmail" type="email" placeholder="Staff email">
+          <input id="stPass" type="password" placeholder="Temporary password (min 6 characters)">
+          <select id="stRole">
+            <option value="receptionist">🧑‍💼 Receptionist</option>
+            <option value="trainer">🏋️ Trainer</option>
+          </select>
+          <button class="btn-full" id="staffBtn">Create staff login</button>
+          <div class="msg" id="staffMsg"></div>
+        </div>
+
+        <div class="card">
+          <h2>👤 Current staff</h2>
+          <div id="staffList"></div>
+        </div>
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -291,8 +487,8 @@
 
 <!-- FULL SCREEN QR -->
 <div id="qrFull" class="qr-full hidden">
-  <p>Scan to check in</p>
-  <canvas id="qrFullCanvas"></canvas>
+  <p>🏋️ Scan to check in 💪</p>
+  <div class="qr-white"><canvas id="qrFullCanvas"></canvas></div>
   <button id="qrFullClose">Close</button>
 </div>
 
@@ -331,6 +527,40 @@ let lastMembersShown = [];
 let lastReport = null;
 let currentGateText = null;
 
+// ---------- Quotes ----------
+const quotes = [
+  "💪 Strong body, strong mind.",
+  "🔥 Sweat today, smile tomorrow.",
+  "🏆 Consistency beats intensity.",
+  "⚡ Pain today is strength tomorrow.",
+  "🎯 Show up. That's half the battle.",
+  "🦾 Every rep counts. Every member matters.",
+  "🏋️ Small steps every day build big results.",
+  "🌟 Your gym, your family, your success."
+];
+let quoteIndex = 0;
+function showQuote() {
+  const box = $("quoteBox");
+  box.classList.add("fade");
+  setTimeout(() => {
+    box.textContent = quotes[quoteIndex % quotes.length];
+    quoteIndex++;
+    box.classList.remove("fade");
+  }, 400);
+}
+showQuote();
+setInterval(showQuote, 6000);
+
+// ---------- Navigation ----------
+function showSection(id) {
+  document.querySelectorAll(".section").forEach((s) => s.classList.toggle("active", s.id === id));
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.sec === id));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+document.querySelectorAll(".nav-btn").forEach((btn) => {
+  btn.addEventListener("click", () => showSection(btn.dataset.sec));
+});
+
 // ---------- Helpers ----------
 function esc(text) {
   return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
@@ -339,9 +569,13 @@ function digits(s) { return String(s || "").replace(/\D/g, ""); }
 function todayStr() { return new Date().toLocaleDateString("en-CA"); }
 function thisMonth() { return todayStr().slice(0, 7); }
 
+function initials(name) {
+  return String(name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+}
+
 function setMsg(id, text, ok = false) {
   const el = $(id);
-  el.style.color = ok ? "#2e7d32" : "#c62828";
+  el.style.color = ok ? "#4ade80" : "#ff6b6b";
   el.textContent = text;
 }
 
@@ -364,8 +598,8 @@ function feeStatusOf(m) {
 
 function feeBadge(m) {
   const d = daysLeft(m.feeStart);
-  if (d === null) return "-";
-  if (d < 0) return `<span class="badge b-exp">Expired ${Math.abs(d)} days ago</span>`;
+  if (d === null) return `<span class="badge b-none">No fee</span>`;
+  if (d < 0) return `<span class="badge b-exp">Expired ${Math.abs(d)}d ago</span>`;
   if (d <= 5) return `<span class="badge b-soon">${d} days left</span>`;
   return `<span class="badge b-ok">${d} days left</span>`;
 }
@@ -421,7 +655,6 @@ function friendlyError(err) {
   return err.message || String(err);
 }
 
-// Random one-time-style code for the gate QR
 function newToken() {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
@@ -461,7 +694,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   role = snap.data().role || "receptionist";
-  $("userEmail").textContent = "Logged in as " + (user.email || "");
+  $("userEmail").textContent = "Signed in as " + (user.email || "");
   $("loginBox").classList.add("hidden");
   $("adminBox").classList.remove("hidden");
   $("reportMonth").value = thisMonth();
@@ -469,10 +702,11 @@ onAuthStateChanged(auth, async (user) => {
   startListening();
 });
 
-// Show or hide sections based on the signed-in role
+// Show or hide sections and buttons based on the signed-in role
 function applyRole() {
   const owner = role === "owner";
   const front = owner || role === "receptionist";
+
   $("roleBadge").textContent = role;
   $("gateCard").classList.toggle("hidden", !front);
   $("memberFormCard").classList.toggle("hidden", !front);
@@ -483,6 +717,15 @@ function applyRole() {
   $("collectedStat").classList.toggle("hidden", !front);
   $("exportMembersBtn").classList.toggle("hidden", !front);
   $("staffCard").classList.toggle("hidden", !owner);
+
+  document.querySelectorAll(".nav-btn").forEach((b) => {
+    const need = b.dataset.roles;
+    const visible = need === "all" || (need === "front" && front) || (need === "owner" && owner);
+    b.classList.toggle("hidden", !visible);
+  });
+
+  // Trainers land on the members list
+  showSection(role === "trainer" ? "secMembers" : "secDash");
 }
 
 // ---------- Live data from Firestore ----------
@@ -534,12 +777,14 @@ function renderGate(data) {
   if (!data || !data.token) {
     currentGateText = null;
     $("qrPlaceholder").classList.remove("hidden");
+    $("qrCanvas").style.display = "none";
     $("gateInfo").textContent = "";
     return;
   }
 
   currentGateText = "GYM-CHECKIN:" + data.token;
   $("qrPlaceholder").classList.add("hidden");
+  $("qrCanvas").style.display = "block";
 
   if (typeof QRCode === "undefined") {
     setMsg("gateMsg", "QR library did not load. Refresh the page.");
@@ -574,7 +819,7 @@ $("fullQrBtn").addEventListener("click", () => {
     setMsg("gateMsg", "Create a QR first.");
     return;
   }
-  QRCode.toCanvas($("qrFullCanvas"), currentGateText, { width: 320, margin: 2 }).catch(() => {});
+  QRCode.toCanvas($("qrFullCanvas"), currentGateText, { width: 300, margin: 2 }).catch(() => {});
   $("qrFull").classList.remove("hidden");
 });
 
@@ -642,33 +887,38 @@ function renderTable() {
     const id = esc(m.id);
     const s = feeStatusOf(m);
     const presentBtn = presentIds.has(m.id)
-      ? `<button class="btn-present" disabled>Present</button>`
-      : `<button class="btn-present" data-action="present" data-id="${id}">Mark present</button>`;
+      ? `<button class="btn-sm" disabled>✅ Present</button>`
+      : `<button class="btn-sm btn-present" data-action="present" data-id="${id}">✔ Mark present</button>`;
     const loginBadge = m.hasLogin
       ? `<span class="badge b-ok">Yes</span>`
       : `<span class="badge b-soon">Not yet</span>`;
 
-    let actions = `<button class="btn-view" data-action="view" data-id="${id}">View</button>`;
+    let actions = `<button class="btn-sm btn-blue" data-action="view" data-id="${id}">👁 View</button>`;
     if (front) {
       if (s === "expiring" || s === "expired") {
-        actions += `<button class="btn-wa" data-action="remind" data-id="${id}">Remind</button>`;
+        actions += `<button class="btn-sm btn-wa" data-action="remind" data-id="${id}">📲 Remind</button>`;
       }
-      actions += `<button class="btn-pay" data-action="pay" data-id="${id}">Pay</button>`;
-      actions += `<button class="btn-edit" data-action="edit" data-id="${id}">Edit</button>`;
+      actions += `<button class="btn-sm btn-purple" data-action="pay" data-id="${id}">💰 Pay</button>`;
+      actions += `<button class="btn-sm btn-dark" data-action="edit" data-id="${id}">✏️ Edit</button>`;
     }
     if (owner) {
-      actions += `<button class="btn-small" data-action="delete" data-id="${id}">Delete</button>`;
+      actions += `<button class="btn-sm btn-danger" data-action="delete" data-id="${id}">🗑 Delete</button>`;
     }
 
     return `
     <tr>
       <td>
-        <strong>${esc(m.name)}</strong>
-        <div class="small">${esc(m.phone)}${m.email ? " · " + esc(m.email) : ""}</div>
-        ${m.address ? `<div class="small">${esc(m.address)}</div>` : ""}
+        <div class="member-cell">
+          <div class="avatar">${esc(initials(m.name))}</div>
+          <div>
+            <strong>${esc(m.name)}</strong>
+            <div class="small">${esc(m.phone)}${m.email ? " · " + esc(m.email) : ""}</div>
+            ${m.address ? `<div class="small">${esc(m.address)}</div>` : ""}
+          </div>
+        </div>
       </td>
-      <td>${esc(m.shift)}</td>
-      <td>${esc(m.feeAmount)}</td>
+      <td>${m.shift === "Evening" ? "🌙" : "🌅"} ${esc(m.shift)}</td>
+      <td>PKR ${esc(m.feeAmount)}</td>
       <td>${feeBadge(m)}</td>
       <td>${presentBtn}</td>
       <td>${loginBadge}</td>
@@ -691,14 +941,14 @@ function renderReport() {
   $("rUnpaid").textContent = unpaid.length;
 
   $("rNewList").innerHTML = newMembers.length
-    ? newMembers.map((m) => `<div class="row-line"><span>${esc(m.name)} · ${esc(m.phone)}</span></div>`).join("")
+    ? newMembers.map((m) => `<div class="row-line"><span>🆕 ${esc(m.name)} · ${esc(m.phone)}</span></div>`).join("")
     : `<p class="small">No new members this month.</p>`;
 
   $("rUnpaidList").innerHTML = unpaid.length
     ? unpaid.map((m) => `
         <div class="row-line">
           <span>${esc(m.name)} · ${esc(m.phone)}</span>
-          <a class="wa-mini" href="${waLink(m.phone, reminderText(m))}" target="_blank">WhatsApp</a>
+          <a class="wa-mini" href="${waLink(m.phone, reminderText(m))}" target="_blank">📲 WhatsApp</a>
         </div>`).join("")
     : `<p class="small">Everyone has paid for this month. 🎉</p>`;
 
@@ -721,7 +971,7 @@ function renderPayments() {
     <tr>
       <td>${esc(p.date)}</td>
       <td>${esc(p.name)}</td>
-      <td>${esc(p.amount)}</td>
+      <td class="amt">PKR ${esc(p.amount)}</td>
       <td>${esc(p.method)}</td>
     </tr>`).join("");
 }
@@ -733,13 +983,13 @@ function renderNotices() {
     $("noticeList").innerHTML = `<p class="small">No notices yet.</p>`;
     return;
   }
-  $("latestNotice").textContent = " " + allNotices[0].text;
+  $("latestNotice").textContent = allNotices[0].text;
   $("latestNoticeBox").classList.remove("hidden");
   $("noticeList").innerHTML = allNotices.slice(0, 30).map((n) => `
     <div class="notice-item">
-      <div>${esc(n.text)}</div>
+      <div class="txt">📢 ${esc(n.text)}</div>
       <div class="small">${esc(n.date)}</div>
-      ${front ? `<button class="btn-small" style="margin-top:6px" data-action="delete-notice" data-id="${esc(n.id)}">Delete notice</button>` : ""}
+      ${front ? `<button class="btn-sm btn-danger" style="margin-top:8px" data-action="delete-notice" data-id="${esc(n.id)}">🗑 Delete notice</button>` : ""}
     </div>`).join("");
 }
 
@@ -755,7 +1005,7 @@ function renderStaff() {
         <span class="badge b-ok">${esc(s.role)}</span>
         <div class="small">${esc(s.email)}</div>
       </div>
-      ${s.role === "owner" ? "" : `<button class="btn-small" data-action="remove-staff" data-id="${esc(s.id)}">Remove</button>`}
+      ${s.role === "owner" ? "" : `<button class="btn-sm btn-danger" data-action="remove-staff" data-id="${esc(s.id)}">Remove</button>`}
     </div>`).join("");
 }
 
@@ -819,11 +1069,14 @@ async function openProfile(id) {
 
   const canWa = role === "owner" || role === "receptionist";
   const waButton = canWa && m.phone
-    ? `<a class="btn-wa-link" href="${waLink(m.phone, reminderText(m))}" target="_blank">Send WhatsApp message</a>`
+    ? `<a class="btn-wa-link" href="${waLink(m.phone, reminderText(m))}" target="_blank">📲 Send WhatsApp message</a>`
     : "";
 
   $("modalBody").innerHTML = `
-    <h2>${esc(m.name)}</h2>
+    <div class="member-cell" style="margin-bottom:12px">
+      <div class="avatar" style="width:56px;height:56px;font-size:20px">${esc(initials(m.name))}</div>
+      <h2 style="margin:0">${esc(m.name)}</h2>
+    </div>
     <div class="kv">
       <div><b>Phone:</b> ${esc(m.phone)}</div>
       <div><b>Email:</b> ${esc(m.email || "-")}</div>
@@ -838,12 +1091,12 @@ async function openProfile(id) {
       <div><b>Notes:</b> ${esc(m.notes || "-")}</div>
     </div>
 
-    <h3>Attendance (${dates.length} visits)</h3>
+    <h3>🏋️ Attendance (${dates.length} visits)</h3>
     <div class="chips">
       ${dates.length ? dates.slice(0, 40).map((x) => `<span>${esc(x)}</span>`).join("") : "<span>No visits yet</span>"}
     </div>
 
-    <h3>Payments</h3>
+    <h3>💰 Payments</h3>
     ${pays.length
       ? pays.map((p) => `
         <div class="pay-row">
@@ -852,7 +1105,7 @@ async function openProfile(id) {
         </div>`).join("")
       : `<p class="small">No payments yet.</p>`}
 
-    <div style="margin-top:12px">${waButton}</div>
+    <div style="margin-top:14px">${waButton}</div>
   `;
 }
 
@@ -863,11 +1116,11 @@ $("modal").addEventListener("click", (e) => {
 
 // ---------- Record payment ----------
 function fillPayment(m) {
+  showSection("secMoney");
   $("payMember").value = m.id;
   $("payAmount").value = m.feeAmount || "";
   $("payDate").value = todayStr();
   setMsg("payMsg", "");
-  $("payCard").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 $("payBtn").addEventListener("click", async () => {
@@ -893,7 +1146,7 @@ $("payBtn").addEventListener("click", async () => {
       createdAt: new Date()
     });
     await updateDoc(doc(db, "members", memberId), { feeStart: date, feeAmount: amount });
-    setMsg("payMsg", "Payment saved. Fee renewed from " + date + ".", true);
+    setMsg("payMsg", "✅ Payment saved. Fee renewed from " + date + ".", true);
     $("payAmount").value = "";
     $("payDate").value = todayStr();
   } catch (err) {
@@ -917,7 +1170,7 @@ $("noticeBtn").addEventListener("click", async () => {
   $("noticeBtn").disabled = true;
   try {
     await addDoc(collection(db, "notices"), { text, date: todayStr(), createdAt: new Date() });
-    setMsg("noticeMsg", "Notice posted.", true);
+    setMsg("noticeMsg", "✅ Notice posted.", true);
     $("noticeText").value = "";
   } catch (err) {
     setMsg("noticeMsg", friendlyError(err));
@@ -942,11 +1195,12 @@ const formFields = {
 };
 
 function startEdit(m) {
+  showSection("secMembers");
   editingId = m.id;
   for (const [key, inputId] of Object.entries(formFields)) {
     $(inputId).value = m[key] ?? (key === "shift" ? "Morning" : "");
   }
-  $("formTitle").textContent = "Edit member";
+  $("formTitle").textContent = "✏️ Edit member";
   $("saveBtn").textContent = "Save changes";
   $("cancelBtn").classList.remove("hidden");
   setMsg("formMsg", "");
@@ -957,7 +1211,7 @@ function resetForm() {
   editingId = null;
   for (const inputId of Object.values(formFields)) $(inputId).value = "";
   $("fShift").value = "Morning";
-  $("formTitle").textContent = "Add member";
+  $("formTitle").textContent = "➕ Add member";
   $("saveBtn").textContent = "Add member";
   $("cancelBtn").classList.add("hidden");
 }
@@ -981,13 +1235,13 @@ $("saveBtn").addEventListener("click", async () => {
   try {
     if (editingId) {
       await updateDoc(doc(db, "members", editingId), { ...data, updatedAt: new Date() });
-      setMsg("formMsg", "Changes saved.", true);
+      setMsg("formMsg", "✅ Changes saved.", true);
     } else {
       if (allMembers.some((m) => digits(m.phone) === data.phone)) {
         throw new Error("A member with this phone number already exists.");
       }
       await addDoc(collection(db, "members"), { ...data, hasLogin: false, createdAt: new Date() });
-      setMsg("formMsg", "Member added. They can create their login on the member page.", true);
+      setMsg("formMsg", "✅ Member added. They can create their login on the member page.", true);
     }
     resetForm();
   } catch (err) {
@@ -1022,7 +1276,7 @@ $("staffBtn").addEventListener("click", async () => {
     $("stName").value = "";
     $("stEmail").value = "";
     $("stPass").value = "";
-    setMsg("staffMsg", `${name} can now log in as ${newRole}.`, true);
+    setMsg("staffMsg", `✅ ${name} can now log in as ${newRole}.`, true);
   } catch (err) {
     setMsg("staffMsg", friendlyError(err));
   } finally {
