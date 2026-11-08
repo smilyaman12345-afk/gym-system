@@ -26,7 +26,7 @@
 
   .hidden { display: none !important; }
 
-  /* Login */
+  /* Login and signup */
   .login-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 20px; }
   .login-wrap h1 { color:#fff; text-align:center; font-size:28px; margin:0; text-shadow: 0 4px 0 rgba(0,0,0,.2); }
   .login-wrap p { color:#fff; margin:6px 0 0; text-align:center; opacity:.9; }
@@ -34,11 +34,11 @@
   .login-card { width: 100%; max-width: 380px; }
 
   .tabs { display:flex; gap:8px; margin-bottom:12px; }
-  .tab { flex:1; padding:10px; border:2px solid #e0e7ff; border-radius:12px; background:#fff; color:#5f27cd; font-weight:bold; cursor:pointer; font-size:14px; }
+  .tab { flex:1; padding:10px; border:2px solid #e0e7ff; border-radius:12px; background:#fff; color:#5f27cd; font-weight:bold; cursor:pointer; font-size:14px; box-shadow:none; }
   .tab.active { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-color:transparent; }
   .step-note { font-size:13px; color:#555; margin:4px 0 8px; }
 
-  /* 3D glass cards */
+  /* Glass cards */
   .glass {
     background: rgba(255,255,255,.94); border-radius: 22px; padding: 20px;
     box-shadow: 0 10px 0 rgba(0,0,0,.12), 0 20px 40px rgba(0,0,0,.2);
@@ -148,7 +148,7 @@
       <button class="tab" id="tabSignup">Create account</button>
     </div>
 
-    <!-- LOGIN SECTION -->
+    <!-- LOGIN -->
     <div id="loginSection">
       <input class="field" id="phone" type="tel" inputmode="numeric" placeholder="📱 Phone number (e.g. 03001234567)">
       <input class="field" id="password" type="password" placeholder="🔒 Password">
@@ -156,7 +156,7 @@
       <div class="msg" id="loginMsg"></div>
     </div>
 
-    <!-- CREATE ACCOUNT SECTION -->
+    <!-- CREATE ACCOUNT -->
     <div id="signupSection" class="hidden">
       <div id="stepOne">
         <p class="step-note">Enter the same details the gym has for you, then we'll let you set a password.</p>
@@ -180,7 +180,7 @@
   </div>
 </section>
 
-<!-- DASHBOARD SCREEN -->
+<!-- DASHBOARD -->
 <section id="dashScreen" class="hidden">
   <header class="top">
     <div>
@@ -273,7 +273,8 @@ const firebaseConfig = {
   appId: "1:754716077658:web:de270bcb6ef08d973ab263"
 };
 
-const app = initializeApp(firebaseConfig);
+// Named app so the member login is stored separately from the admin page
+const app = initializeApp(firebaseConfig, "memberApp");
 const auth = getAuth(app);
 const db = getFirestore(app);
 
@@ -446,7 +447,6 @@ $("createBtn").addEventListener("click", async () => {
   $("createBtn").disabled = true;
   try {
     await createUserWithEmailAndPassword(auth, verified.phone + "@gym.local", pw);
-    // Mark the gym record as having a login. The member is signed in now.
     await updateDoc(doc(db, "members", verified.id), { hasLogin: true });
     verified = null;
   } catch (err) {
@@ -478,7 +478,6 @@ $("cpSaveBtn").addEventListener("click", async () => {
 
   $("cpSaveBtn").disabled = true;
   try {
-    // Confirm the current password first, then change it
     const cred = EmailAuthProvider.credential(user.email, current);
     await reauthenticateWithCredential(user, cred);
     await updatePassword(user, next);
@@ -513,7 +512,6 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   member = { id: snap.docs[0].id, ...snap.docs[0].data() };
-  $("userNameTop") && ($("userNameTop").textContent = member.name);
   showScreen("dash");
   startListening();
 });
