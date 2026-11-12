@@ -14,7 +14,6 @@
   .hidden { display:none !important; }
   h1, h2, h3, .display { font-family:Michroma, Arial, sans-serif; font-weight:400; margin:0; }
   button { font-family:inherit; }
-  img { display:block; }
 
   /* Buttons */
   .btn { background:var(--orange); color:#fff; border:none; padding:11px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:14px; }
@@ -44,7 +43,6 @@
   .login-brand h1 { font-size:26px; letter-spacing:2px; }
   .login-card { width:100%; max-width:380px; background:#fff; border-radius:16px; padding:24px; box-shadow:0 8px 24px rgba(0,0,0,.06); }
   .login-card h2 { font-size:16px; letter-spacing:2px; margin-bottom:12px; }
-  .login-photo { width:100%; max-width:380px; height:160px; object-fit:cover; border-radius:16px; background:var(--charcoal); }
 
   /* Top bar */
   .infobar { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:8px 18px; background:var(--grey); font-size:12px; }
@@ -68,15 +66,13 @@
   .section.active { display:block; }
 
   /* Hero */
-  .hero { position:relative; border-radius:16px; overflow:hidden; background:var(--charcoal); color:#fff; display:flex; flex-wrap:wrap; margin-bottom:16px; }
-  .hero-text { flex:1; min-width:260px; padding:28px 24px; display:flex; flex-direction:column; justify-content:center; }
+  .hero { border-radius:16px; overflow:hidden; background:var(--charcoal); color:#fff; margin-bottom:16px; }
+  .hero-text { padding:28px 24px; display:flex; flex-direction:column; justify-content:center; }
   .hero-text .t1 { font-family:Michroma, Arial, sans-serif; font-size:26px; letter-spacing:2px; line-height:1.3; }
   .hero-text .t2 { font-family:Michroma, Arial, sans-serif; font-size:15px; letter-spacing:3px; color:var(--orange); margin-top:6px; }
   .quote-box { margin-top:16px; background:#fff; color:var(--charcoal); border-radius:10px; padding:12px 14px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; min-height:46px; transition:opacity .4s; }
   .quote-box.fade { opacity:0; }
   .quote-box i { color:var(--orange); font-size:18px; }
-  .hero-photo { width:300px; max-width:100%; min-height:240px; background:#3a3a3a; object-fit:cover; flex-shrink:0; }
-  .photo-fallback { background:#3a3a3a; }
 
   /* Stats */
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
@@ -88,12 +84,10 @@
   .stat .lbl { font-size:11px; letter-spacing:1px; font-weight:700; margin-top:4px; color:#5c5c57; }
   .stat.hot .lbl { color:#fff; }
 
-  /* Banner */
-  .banner { position:relative; height:130px; border-radius:14px; overflow:hidden; background:var(--charcoal); margin-bottom:16px; display:flex; align-items:center; }
-  .banner img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.55; }
-  .banner-text { position:relative; padding:0 22px; color:#fff; }
+  /* Notice banner */
+  .banner { border-radius:14px; background:var(--charcoal); margin-bottom:16px; padding:22px; color:#fff; }
   .banner-text .t { font-family:Michroma, Arial, sans-serif; font-size:18px; letter-spacing:2px; }
-  .banner-text .s { font-size:13px; margin-top:6px; color:#fff; }
+  .banner-text .s { font-size:14px; margin-top:8px; color:#fff; }
 
   /* Layout */
   .two { display:grid; grid-template-columns:1fr; gap:16px; }
@@ -111,9 +105,7 @@
   .qr-placeholder { font-size:13px; color:#5c5c57; }
   .small { font-size:12px; color:#5c5c57; }
 
-  .tip-row { display:flex; gap:12px; align-items:center; }
-  .member-photo { width:76px; height:76px; border-radius:50%; object-fit:cover; background:var(--charcoal); flex-shrink:0; border:3px solid var(--orange); }
-  .tip-list { font-size:13px; line-height:1.8; }
+  .tip-list { font-size:13px; line-height:1.9; }
   .tip-list i { color:var(--orange); }
 
   /* Tables */
@@ -175,7 +167,6 @@
     <button class="btn btn-full" id="loginBtn">Login</button>
     <div class="msg" id="loginMsg"></div>
   </div>
-  <img class="login-photo" src="hero.jpg" alt="" onerror="this.style.display='none'">
 </div>
 
 <!-- ADMIN -->
@@ -218,7 +209,6 @@
           <div class="t2">RUN SMART</div>
           <div class="quote-box" id="quoteBox"></div>
         </div>
-        <img class="hero-photo" src="hero.jpg" alt="Bodybuilder flexing" onerror="this.classList.add('photo-fallback'); this.removeAttribute('src');">
       </div>
 
       <div class="stats">
@@ -231,7 +221,6 @@
       </div>
 
       <div class="banner" id="latestNoticeBox">
-        <img src="banner.jpg" alt="" onerror="this.style.display='none'">
         <div class="banner-text">
           <div class="t">LATEST NOTICE</div>
           <div class="s" id="latestNotice">No notices yet.</div>
@@ -254,14 +243,11 @@
 
         <div class="card">
           <h2><i class="ti ti-bulb" aria-hidden="true"></i> QUICK TIPS</h2>
-          <div class="tip-row">
-            <img class="member-photo" src="member.jpg" alt="Smiling member" onerror="this.classList.add('photo-fallback'); this.removeAttribute('src');">
-            <div class="tip-list">
-              <i class="ti ti-check" aria-hidden="true"></i> Mark members present on arrival<br>
-              <i class="ti ti-check" aria-hidden="true"></i> Record payments to restart fees<br>
-              <i class="ti ti-check" aria-hidden="true"></i> Send reminders to expiring members<br>
-              <i class="ti ti-check" aria-hidden="true"></i> Post notices your members will see
-            </div>
+          <div class="tip-list">
+            <i class="ti ti-check" aria-hidden="true"></i> Mark members present on arrival<br>
+            <i class="ti ti-check" aria-hidden="true"></i> Record payments to restart fees<br>
+            <i class="ti ti-check" aria-hidden="true"></i> Send reminders to expiring members<br>
+            <i class="ti ti-check" aria-hidden="true"></i> Post notices your members will see
           </div>
         </div>
       </div>
@@ -1040,12 +1026,12 @@ async function openProfile(id) {
       <div><b>Notes:</b> ${esc(m.notes || "-")}</div>
     </div>
 
-    <h3 style="font-size:13px;letter-spacing:2px;color:var(--orange);margin:16px 0 8px">ATTENDANCE (${dates.length} VISITS)</h3>
+    <h3 style="font-size:12px;letter-spacing:2px;color:var(--orange);margin:16px 0 8px">ATTENDANCE (${dates.length} VISITS)</h3>
     <div class="chips">
       ${dates.length ? dates.slice(0, 40).map((x) => `<span>${esc(x)}</span>`).join("") : "<span>No visits yet</span>"}
     </div>
 
-    <h3 style="font-size:13px;letter-spacing:2px;color:var(--orange);margin:16px 0 8px">PAYMENTS</h3>
+    <h3 style="font-size:12px;letter-spacing:2px;color:var(--orange);margin:16px 0 8px">PAYMENTS</h3>
     ${pays.length
       ? pays.map((p) => `
         <div class="pay-row">
